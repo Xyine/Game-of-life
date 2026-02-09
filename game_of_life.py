@@ -1,11 +1,13 @@
 import os
 import random
+import threading
+import keyboard
 from time import sleep
 
 
 DEAD = 0
 ALIVE = 1
-
+running = True
 
 def dead_state(width: int, height: int) -> list[list[int]]:
     return [[0 for _ in range(width)] for _ in range(height)] 
@@ -59,15 +61,28 @@ def next_board_state(board_state: list[list[int]]) -> list[list[int]]:
     return result
 
 
-def run_life(board_width: int = 80, board_height: int = 40, interval_s: float = 0.01) -> None:
+def listen_keyboard():
+    """Listen for space imput on keyboard."""
+    while True:
+        if keyboard.is_pressed("space"):
+            global running
+            running = not running
+        sleep(0.1)
+
+
+def run_life(board_width: int = 80, board_height: int = 40, interval_s: float = 0.5) -> None:
     """Run the game of life in the terminal."""
+    
+    thread = threading.Thread(target=listen_keyboard)
+    thread.start()
 
     board = random_state(board_width, board_height)
 
     while True:
         os.system('clear')
         print(render(board))
-        board = next_board_state(board)
+        if running:
+            board = next_board_state(board)
         sleep(interval_s)
 
 
