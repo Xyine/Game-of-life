@@ -8,6 +8,8 @@ from time import sleep
 DEAD = 0
 ALIVE = 1
 running = True
+game = True
+
 
 def dead_state(width: int, height: int) -> list[list[int]]:
     return [[0 for _ in range(width)] for _ in range(height)] 
@@ -63,27 +65,31 @@ def next_board_state(board_state: list[list[int]]) -> list[list[int]]:
 
 def listen_keyboard():
     """Listen for space imput on keyboard."""
-    while True:
+    global running, game
+    while game:
         if keyboard.is_pressed("space"):
-            global running
             running = not running
-        sleep(0.1)
-
+            sleep(0.1)
+        elif keyboard.is_pressed("q"):
+            game = False
+        sleep(0.05)
 
 def run_life(board_width: int = 80, board_height: int = 40, interval_s: float = 0.5) -> None:
     """Run the game of life in the terminal."""
-    
+    global running, game
+
     thread = threading.Thread(target=listen_keyboard)
     thread.start()
 
     board = random_state(board_width, board_height)
 
-    while True:
+    while game:
         os.system('clear')
         print(render(board))
         if running:
             board = next_board_state(board)
         sleep(interval_s)
+    os.system('clear')
 
 
 run_life()
