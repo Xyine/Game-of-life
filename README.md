@@ -1,4 +1,4 @@
-# Game of Life (Terminal Version)
+# Game of Life
 
 A simple Python implementation of Conway’s Game of Life, playable in the terminal with interactive controls.
 
