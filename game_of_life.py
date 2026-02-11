@@ -1,17 +1,27 @@
 import os
 import random
 import threading
+from typing import Callable
 import keyboard
 from time import sleep
 
 
 class GameOfLife():
 
-    def __init__(self):
-        self.DEAD = 0
-        self.ALIVE = 1
-        self.running = True
-        self.game = False
+    def __init__(
+        self,
+        board_width: int = 80,
+        board_height: int = 40,
+        rules: Callable[[list[list[int]], int, int], int] | None = None
+    ) -> None:
+        self.DEAD: int = 0
+        self.ALIVE: int = 1
+        self.running: bool = True
+        self.game: bool = False
+        self.board_width = board_width
+        self.board_height = board_height
+        self.interval_s: float = 0.5
+        self.rules = rules if rules else self.classic_rules
 
     def dead_state(self, width: int, height: int) -> list[list[int]]:
         """Return a grid of DEAD cell of size height x width."""
@@ -19,7 +29,10 @@ class GameOfLife():
 
     def random_state(self, width: int, height: int) -> list[list[int]]:
         """Return a grid of size height x width filled with random 0/1 values."""
-        return [[random.choice([self.DEAD, self.ALIVE]) for _ in range(width)] for _ in range(height)]
+        return [
+            [random.choice([self.DEAD, self.ALIVE]) for _ in range(width)]
+            for _ in range(height)
+        ]
 
     def render(self, board_state: list[list[int]]) -> str:
         """Return a visual str of a board state that can be print in the terminal."""
@@ -30,11 +43,8 @@ class GameOfLife():
             for row in board_state
             )
 
-    def classic_rule(self, previous_board:list[list[int]], i: int, j: int) -> int:
+    def classic_rules(self, previous_board:list[list[int]], i: int, j: int) -> int:
         """Calcul method for the classic rules of the game of life."""
-        board_width: int = len(previous_board[0])
-        board_height: int = len(previous_board)
-
         alive_neighbors = 0
 
         for transposition_i, transposition_j in [
@@ -45,7 +55,7 @@ class GameOfLife():
             new_i = i + transposition_i
             new_j = j + transposition_j
 
-            if 0 <= new_i < board_height and 0 <= new_j < board_width:
+            if 0 <= new_i < self.board_height and 0 <= new_j < self.board_width:
                 if previous_board[new_i][new_j] == self.ALIVE:
                     alive_neighbors += 1
         
@@ -53,17 +63,13 @@ class GameOfLife():
             return self.ALIVE
         return self.DEAD
 
-    def next_board_state(self, board_state: list[list[int]], rules: str) -> list[list[int]]:
+    def next_board_state(self, board_state: list[list[int]]) -> list[list[int]]:
         """Return the next board state given a board, following the classic rules of the game of life."""
-        board_width = len(board_state[0])
-        board_height = len(board_state)
+        result = self.dead_state(self.board_width, self.board_height)
 
-        result = self.dead_state(board_width, board_height)
-
-        for i in range(board_height):
-            for j in range(board_width):
-                if rules == "classic":
-                    result[i][j] = self.classic_rule(board_state, i, j)
+        for i in range(self.board_height):
+            for j in range(self.board_width):
+                result[i][j] = self.rules(board_state, i, j)
 
         return result
     
@@ -79,9 +85,6 @@ class GameOfLife():
         """Stop the game."""
         self.game = False
 
-    def start(self):
-        return
-
     def listen_keyboard(self) -> None:
         """Listen for space imput on keyboard."""
         while self.game:
@@ -95,22 +98,21 @@ class GameOfLife():
                 self.stop()
             sleep(0.05)
 
-    def start(self, board_width: int = 80, board_height: int = 40, interval_s: float = 0.5, rules: str = "classic") -> None:
+    def start(self) -> None:
         """Run the game of life in the terminal."""
-
         self.game = True
 
         thread = threading.Thread(target=self.listen_keyboard)
         thread.start()
 
-        board = self.random_state(board_width, board_height)
+        board = self.random_state(self.board_width, self.board_height)
 
         while self.game:
             os.system('cls' if os.name == 'nt' else 'clear')
             print(self.render(board))
             if self.running:
-                board = self.next_board_state(board, rules)
-            sleep(interval_s)
+                board = self.next_board_state(board)
+            sleep(self.interval_s)
         os.system('cls' if os.name == 'nt' else 'clear')
 
 
