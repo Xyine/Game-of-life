@@ -1,3 +1,4 @@
+import json
 import os
 import random
 import threading
@@ -12,20 +13,22 @@ class GameOfLife():
         self,
         board_width: int = 80,
         board_height: int = 40,
-        rules: Callable[[list[list[int]], int, int], int] | None = None
+        board_file: str | None = None ,
+        rules: Callable[[int, int], int] | None = None
     ) -> None:
         self.DEAD: int = 0
         self.ALIVE: int = 1
         self.running: bool = True
         self.game: bool = False
-        self.board_width = board_width
-        self.board_height = board_height
+        self.board = self.load_state_from_file(board_file) if board_file else self.random_state(board_width, board_height)
+        self.board_width = len(self.board[0])
+        self.board_height = len(self.board)
         self.interval_s: float = 0.5
         self.rules = rules if rules else self.classic_rules
 
     def dead_state(self, width: int, height: int) -> list[list[int]]:
         """Return a grid of DEAD cell of size height x width."""
-        return [[0 for _ in range(width)] for _ in range(height)] 
+        return [[self.DEAD for _ in range(width)] for _ in range(height)] 
 
     def random_state(self, width: int, height: int) -> list[list[int]]:
         """Return a grid of size height x width filled with random 0/1 values."""
@@ -43,8 +46,8 @@ class GameOfLife():
             for row in board_state
             )
 
-    def classic_rules(self, previous_board:list[list[int]], i: int, j: int) -> int:
-        """Calcul method for the classic rules of the game of life."""
+    def classic_rules(self, i: int, j: int) -> int:
+        """Calcul method of the next state of one cell for the classic rules of the game of life."""
         alive_neighbors = 0
 
         for transposition_i, transposition_j in [
@@ -56,23 +59,35 @@ class GameOfLife():
             new_j = j + transposition_j
 
             if 0 <= new_i < self.board_height and 0 <= new_j < self.board_width:
-                if previous_board[new_i][new_j] == self.ALIVE:
+                if self.board[new_i][new_j] == self.ALIVE:
                     alive_neighbors += 1
         
-        if alive_neighbors == 3 or (previous_board[i][j] == self.ALIVE and alive_neighbors == 2):
+        if alive_neighbors == 3 or (self.board[i][j] == self.ALIVE and alive_neighbors == 2):
             return self.ALIVE
         return self.DEAD
 
-    def next_board_state(self, board_state: list[list[int]]) -> list[list[int]]:
+    def next_board_state(self) -> list[list[int]]:
         """Return the next board state given a board, following the classic rules of the game of life."""
         result = self.dead_state(self.board_width, self.board_height)
 
         for i in range(self.board_height):
             for j in range(self.board_width):
-                result[i][j] = self.rules(board_state, i, j)
+                result[i][j] = self.rules(i, j)
 
         return result
-    
+
+    def load_state_from_file(self, path: str) -> list[list[int]]:
+        """Return a valid board from a file."""
+        with open(path) as f:
+            board = json.load(f)
+
+        if not all(len(row) == len(board[0]) for row in board):
+            raise ValueError("Invalid board: not all rows have the same length")
+        if not all(cell in (self.DEAD, self.ALIVE) for row in board for cell in row):
+            raise ValueError("Invalid board: only 0 or 1 allowed")
+        
+        return board
+
     def pause(self) -> None:
         """Pause the game."""
         self.running = False
@@ -102,21 +117,19 @@ class GameOfLife():
         """Run the game of life in the terminal."""
         self.game = True
 
-        thread = threading.Thread(target=self.listen_keyboard)
+        thread = threading.Thread(target=self.listen_keyboard, daemon=True) # Automatically terminate the thread when the main program exits
         thread.start()
-
-        board = self.random_state(self.board_width, self.board_height)
 
         while self.game:
             os.system('cls' if os.name == 'nt' else 'clear')
-            print(self.render(board))
+            print(self.render(self.board))
             if self.running:
-                board = self.next_board_state(board)
+                self.board = self.next_board_state()
             sleep(self.interval_s)
         os.system('cls' if os.name == 'nt' else 'clear')
 
 
-GameOfLife().start()
+GameOfLife(board_file="blinker.json").start()
 
 
 

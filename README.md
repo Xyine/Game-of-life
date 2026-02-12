@@ -22,12 +22,18 @@ A simple Python implementation of Conway’s Game of Life, playable in the termi
 pip install keyboard
 ```
 
-Running the Game
+## Running the Game
 
 Activate your virtual environment, then run:
 
+On Linux and MacOS:
 ```bash
 sudo $(which python3) game_of_life.py
+```
+
+On Windows:
+```bash
+python3 game_of_life.py
 ```
 
 Using sudo with the Python from your venv lets the game detect keyboard input without installing the library system-wide.
