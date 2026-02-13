@@ -2,16 +2,40 @@ import json
 import os
 import random
 import threading
-from typing import Callable
+from typing import Callable, Literal, Optional
 import keyboard
 from time import sleep
 
+from pydantic import BaseModel, model_validator
+
+
+class BoardFile(BaseModel):
+    format: Literal["grid", "coordinates"]
+
+    # grid format
+    grid: Optional[list[list[int]]] = None
+
+    # coordinate format
+    width: Optional[int] = None
+    height: Optional[int] = None
+    alive_cells: Optional[list[list[int]]] = None
+
+    @model_validator(mode="after")
+    def validate_structure(self):
+        if self.format == "grid":
+            if self.grid is None:
+                raise ValueError("Grid format requires 'grid'")
+        elif self.format == "coordinates":
+            if None in (self.width, self.height, self.alive_cells):
+                raise ValueError("Coordinates format requires width, height and alive_cells")
+        return self
+    
 
 class GameOfLife():
 
     def __init__(
         self,
-        board_width: int = 80,
+        board_width: int = 50,
         board_height: int = 40,
         board_file: str | None = None ,
         rules: Callable[[int, int], int] | None = None
@@ -75,18 +99,44 @@ class GameOfLife():
                 result[i][j] = self.rules(i, j)
 
         return result
+    
+    def build_from_coordinates(self, data: BoardFile) -> list[list[int]]:
+        """Build a full grid from a coordinate-based board definition."""
+
+        width = data.width
+        height = data.height
+        alive_cells = data.alive_cells
+
+        board = [[0 for _ in range(width)] for _ in range(height)]
+
+        for cell in alive_cells:
+            if len(cell) != 2:
+                raise ValueError("Each alive cell must contain exactly two integers")
+
+            row, col = cell
+
+            if not (0 <= row < height and 0 <= col < width):
+                raise ValueError(
+                    f"Alive cell ({row}, {col}) is outside board bounds "
+                    f"(height={height}, width={width})"
+                )
+
+            board[row][col] = 1
+
+        return board
 
     def load_state_from_file(self, path: str) -> list[list[int]]:
         """Return a valid board from a file."""
         with open(path) as f:
-            board = json.load(f)
-
-        if not all(len(row) == len(board[0]) for row in board):
-            raise ValueError("Invalid board: not all rows have the same length")
-        if not all(cell in (self.DEAD, self.ALIVE) for row in board for cell in row):
-            raise ValueError("Invalid board: only 0 or 1 allowed")
+            json_data = json.load(f)
         
-        return board
+        data = BoardFile.model_validate(json_data)
+
+        if data.format == "grid":
+            return data.grid
+        else:
+            return self.build_from_coordinates(data)
+
 
     def pause(self) -> None:
         """Pause the game."""
