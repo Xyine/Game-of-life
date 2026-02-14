@@ -35,19 +35,35 @@ class GameOfLife():
 
     def __init__(
         self,
-        board_width: int = 50,
-        board_height: int = 40,
+        board_width: int | None = None,
+        board_height: int | None = None,
         board_file: str | None = None ,
+        interval_s: float = 0.5,
+        fill_mode: str = "dead",
         rules: Callable[[int, int], int] | None = None
     ) -> None:
         self.DEAD: int = 0
         self.ALIVE: int = 1
         self.running: bool = True
         self.game: bool = False
-        self.board = self.load_state_from_file(board_file) if board_file else self.random_state(board_width, board_height)
-        self.board_width = len(self.board[0])
-        self.board_height = len(self.board)
-        self.interval_s: float = 0.5
+        if board_file:
+            self.board = self.load_state_from_file(board_file)
+            self.board_width = board_width if board_width else len(self.board[0])
+            self.board_height = board_height if board_height else len(self.board)
+            
+            if board_height and board_width:
+                self.board = self.integrate_pattern(
+                    self.board,
+                    self.board_width,
+                    self.board_height,
+                    fill_mode
+                )
+        else:
+            if board_width is None or board_height is None:
+                self.board_width, self.board_height = 50, 40
+
+            self.board = self.random_state(board_width, board_height)
+        self.interval_s: float = interval_s
         self.rules = rules if rules else self.classic_rules
 
     def dead_state(self, width: int, height: int) -> list[list[int]]:
@@ -60,6 +76,43 @@ class GameOfLife():
             [random.choice([self.DEAD, self.ALIVE]) for _ in range(width)]
             for _ in range(height)
         ]
+
+    def integrate_pattern(
+        self,
+        pattern: list[list[int]],
+        board_width: int,
+        board_height: int,
+        fill_mode: str = "dead"
+    ) -> list[list[int]]:
+
+        pattern_height = len(pattern)
+        pattern_width = len(pattern[0])
+
+        # Refuse if pattern bigger than board
+        if pattern_width > board_width or pattern_height > board_height:
+            raise ValueError(
+                "Board is smaller than pattern. "
+                f"Pattern size: {pattern_width}x{pattern_height}, "
+                f"Board size: {board_width}x{board_height}"
+            )
+
+        # Create base board
+        if fill_mode == "dead":
+            board = [[self.DEAD for _ in range(board_width)]
+                    for _ in range(board_height)]
+        elif fill_mode == "random":
+            board = [[random.choice([self.DEAD, self.ALIVE])
+                    for _ in range(board_width)]
+                    for _ in range(board_height)]
+        else:
+            raise ValueError("fill_mode must be 'dead' or 'random'")
+
+        # Place pattern in top-left corner
+        for i in range(pattern_height):
+            for j in range(pattern_width):
+                board[i][j] = pattern[i][j]
+
+        return board
 
     def render(self, board_state: list[list[int]]) -> str:
         """Return a visual str of a board state that can be print in the terminal."""
