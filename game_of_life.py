@@ -40,6 +40,7 @@ class GameOfLife():
         board_file: str | None = None ,
         interval_s: float = 0.5,
         fill_mode: str = "dead",
+        placement: str = "topleft",
         rules: Callable[[int, int], int] | None = None
     ) -> None:
         self.DEAD: int = 0
@@ -56,7 +57,8 @@ class GameOfLife():
                     self.board,
                     self.board_width,
                     self.board_height,
-                    fill_mode
+                    fill_mode,
+                    placement,
                 )
         else:
             if board_width is None or board_height is None:
@@ -82,7 +84,8 @@ class GameOfLife():
         pattern: list[list[int]],
         board_width: int,
         board_height: int,
-        fill_mode: str = "dead"
+        fill_mode: str,
+        placement: str
     ) -> list[list[int]]:
 
         pattern_height = len(pattern)
@@ -108,9 +111,19 @@ class GameOfLife():
             raise ValueError("fill_mode must be 'dead' or 'random'")
 
         # Place pattern in top-left corner
+        if placement == "topleft":
+            offset_y = 0
+            offset_x = 0
+        elif placement == "center":
+            offset_y = (board_height - pattern_height) // 2
+            offset_x = (board_width - pattern_width) // 2
+        else:
+            raise ValueError("placement must be 'topleft' or 'center'")
+
+        # Place pattern
         for i in range(pattern_height):
             for j in range(pattern_width):
-                board[i][j] = pattern[i][j]
+                board[i + offset_y][j + offset_x] = pattern[i][j]
 
         return board
 
@@ -232,7 +245,7 @@ class GameOfLife():
         os.system('cls' if os.name == 'nt' else 'clear')
 
 
-GameOfLife(board_file="blinker.json").start()
+GameOfLife(board_file='board_file/pulsar.json', board_height=40, board_width=50, placement="center").start()
 
 
 
