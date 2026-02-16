@@ -63,10 +63,18 @@ class GameOfLife():
         else:
             if board_width is None or board_height is None:
                 self.board_width, self.board_height = 50, 40
+            else:
+                self.board_width, self.board_height = board_width, board_height
 
-            self.board = self.random_state(board_width, board_height)
+            self.board = self.random_state(self.board_width, self.board_height)
         self.interval_s: float = interval_s
-        self.rules = rules if rules else self.classic_rules
+        self.rules = (rules.__get__(self)) if rules else self.classic_rules
+        self.ever_alive = set()
+
+        for i in range(self.board_height):
+            for j in range(self.board_width):
+                if self.board[i][j] == self.ALIVE:
+                    self.ever_alive.add((i, j))
 
     def dead_state(self, width: int, height: int) -> list[list[int]]:
         """Return a grid of DEAD cell of size height x width."""
@@ -156,6 +164,31 @@ class GameOfLife():
             return self.ALIVE
         return self.DEAD
 
+    def respaw_rules(self, i: int, j: int) -> int:
+        """Classic rules but dead cell have a 20% chance of respawing if they were ever alive."""
+        alive_neighbors = 0
+
+        for transposition_i, transposition_j in [
+            (-1, -1), (-1, 0),  (-1, 1),
+            (0, -1),            (0, 1),
+            (1, -1), (1, 0),  (1, 1)    
+        ]:
+            new_i = i + transposition_i
+            new_j = j + transposition_j
+
+            if 0 <= new_i < self.board_height and 0 <= new_j < self.board_width:
+                if self.board[new_i][new_j] == self.ALIVE:
+                    alive_neighbors += 1
+        
+        if alive_neighbors == 3 or (
+            self.board[i][j] == self.ALIVE and alive_neighbors == 2) or (
+            self.board[i][j] == self.DEAD  and (i, j) in self.ever_alive and random.random() <= 0.01
+        ) :
+            return self.ALIVE
+        
+        return self.DEAD
+
+
     def next_board_state(self) -> list[list[int]]:
         """Return the next board state given a board, following the classic rules of the game of life."""
         result = self.dead_state(self.board_width, self.board_height)
@@ -163,6 +196,11 @@ class GameOfLife():
         for i in range(self.board_height):
             for j in range(self.board_width):
                 result[i][j] = self.rules(i, j)
+
+        for i in range(self.board_height):
+            for j in range(self.board_width):
+                if result[i][j] == self.ALIVE:
+                    self.ever_alive.add((i, j))
 
         return result
     
@@ -245,7 +283,7 @@ class GameOfLife():
         os.system('cls' if os.name == 'nt' else 'clear')
 
 
-GameOfLife(board_file='board_file/pulsar.json', board_height=40, board_width=50, placement="center").start()
+GameOfLife(rules=GameOfLife.respaw_rules).start()
 
 
 
