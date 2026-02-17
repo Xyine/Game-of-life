@@ -45,6 +45,7 @@ class GameOfLife():
     ) -> None:
         self.DEAD: int = 0
         self.ALIVE: int = 1
+        self.ZOMBIE: int = 2
         self.running: bool = True
         self.game: bool = False
         if board_file:
@@ -137,7 +138,7 @@ class GameOfLife():
 
     def render(self, board_state: list[list[int]]) -> str:
         """Return a visual str of a board state that can be print in the terminal."""
-        mapping_dead_alive: dict[int, str] = {0: "⬛", 1: "⬜"}
+        mapping_dead_alive: dict[int, str] = {self.DEAD: "⬛", self.ALIVE: "⬜", self.ZOMBIE: "🟩"}
 
         return "\n".join(
             "".join(mapping_dead_alive[cell] for cell in row)
@@ -188,6 +189,44 @@ class GameOfLife():
         
         return self.DEAD
 
+    def zombie_rules(self, i: int, j: int) -> int:
+        alive_neighbors = 0
+        zombie_neighbors = 0
+
+        for di, dj in [
+            (-1, -1), (-1, 0), (-1, 1),
+            (0, -1),           (0, 1),
+            (1, -1),  (1, 0),  (1, 1)
+        ]:
+            ni = i + di
+            nj = j + dj
+
+            if 0 <= ni < len(self.board) and 0 <= nj < len(self.board[0]):
+                if self.board[ni][nj] == self.ALIVE:
+                    alive_neighbors += 1
+                elif self.board[ni][nj] == self.ZOMBIE:
+                    zombie_neighbors += 1
+
+        current = self.board[i][j]
+
+        if current == self.ALIVE:
+            if random.randint(1, 1000) == 1:
+                return self.ZOMBIE
+            if alive_neighbors == 0 and zombie_neighbors >= 1:
+                return self.ZOMBIE
+
+        if current == self.ALIVE:
+            if alive_neighbors == 2 or alive_neighbors == 3:
+                return self.ALIVE
+            return self.DEAD
+
+        if current == self.DEAD:
+            if alive_neighbors == 3:
+                return self.ALIVE
+            return self.DEAD
+
+        if current == self.ZOMBIE:
+            return self.ZOMBIE
 
     def next_board_state(self) -> list[list[int]]:
         """Return the next board state given a board, following the classic rules of the game of life."""
@@ -283,7 +322,7 @@ class GameOfLife():
         os.system('cls' if os.name == 'nt' else 'clear')
 
 
-GameOfLife(rules=GameOfLife.respaw_rules).start()
+GameOfLife(rules=GameOfLife.zombie_rules).start()
 
 
 
