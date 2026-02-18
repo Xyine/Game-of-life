@@ -41,7 +41,8 @@ class GameOfLife():
         interval_s: float = 0.5,
         fill_mode: str = "dead",
         placement: str = "topleft",
-        rules: Callable[[int, int], int] | None = None
+        rules: Callable[[int, int], int] | None = None,
+        colored_patern: bool = False
     ) -> None:
         self.DEAD: int = 0
         self.ALIVE: int = 1
@@ -71,6 +72,7 @@ class GameOfLife():
         self.interval_s: float = interval_s
         self.rules = (rules.__get__(self)) if rules else self.classic_rules
         self.ever_alive = set()
+        self.colored_patern = colored_patern
 
         for i in range(self.board_height):
             for j in range(self.board_width):
@@ -270,6 +272,65 @@ class GameOfLife():
 
         return result
     
+    def is_valid(self, ni, nj):
+        return 0 <= ni < len(self.board) and 0 <= nj < len(self.board[0])
+
+    def detect_block(self, i, j, detected_patterns, used_cells):
+
+        block_cells = [
+            (i, j),
+            (i, j+1),
+            (i+1, j),
+            (i+1, j+1)
+        ]
+
+        for (x, y) in block_cells:
+            if not self.is_valid(x, y):
+                return
+            if self.board[x][y] != self.ALIVE:
+                return
+            if (x, y) in used_cells:
+                return
+
+        for x in range(i-1, i+3):
+            for y in range(j-1, j+3):
+
+                if not self.is_valid(x, y):
+                    continue
+
+                if (x, y) not in block_cells:
+                    if self.board[x][y] != self.DEAD:
+                        return
+
+        detected_patterns.append(("block", block_cells))
+
+        for cell in block_cells:
+            used_cells.add(cell)
+
+    def detect_patterns(self):
+        detected_patterns = []
+        used_cells = set()
+
+        for i in range(self.board_width - 1):
+            for j in range(self.board_height - 1):
+
+                if self.is_valid(i, j) and self.board[i][j] == self.ALIVE:
+                    self.detect_block(i, j, detected_patterns, used_cells)
+
+        return detected_patterns
+
+    def apply_block_colors(self, rendered_str: str, detected_patterns: list) -> str:
+        """ Return str with colored pattern."""
+        grid = [list(row) for row in rendered_str.split("\n")]
+
+        for name, cells in detected_patterns:
+
+            if name == "block":
+                for (i, j) in cells:
+                    grid[i][j] = "🟫"
+
+        return "\n".join("".join(row) for row in grid)
+
     def build_from_coordinates(self, data: BoardFile) -> list[list[int]]:
         """Build a full grid from a coordinate-based board definition."""
 
@@ -342,14 +403,17 @@ class GameOfLife():
 
         while self.game:
             os.system('cls' if os.name == 'nt' else 'clear')
-            print(self.render(self.board))
+            if self.colored_patern:
+                print(self.apply_block_colors(self.render(self.board), self.detect_patterns()))
+            else:
+                print(self.render(self.board))
             if self.running:
                 self.board = self.next_board_state()
             sleep(self.interval_s)
         os.system('cls' if os.name == 'nt' else 'clear')
 
 
-GameOfLife(rules=GameOfLife.von_neumann_rules).start()
+GameOfLife(colored_patern=True).start()
 
 
 
