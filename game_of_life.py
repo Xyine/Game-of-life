@@ -227,7 +227,34 @@ class GameOfLife():
 
         if current == self.ZOMBIE:
             return self.ZOMBIE
+        
+    def von_neumann_rules(self, i: int, j: int) -> int:
+        alive_neighbors = 0
 
+        for di, dj in [
+            (-1, 0),
+            (0, -1), (0, 1),
+            (1, 0)
+        ]:
+            ni = i + di
+            nj = j + dj
+
+            if 0 <= ni < len(self.board) and 0 <= nj < len(self.board[0]):
+                if self.board[ni][nj] == self.ALIVE:
+                    alive_neighbors += 1
+
+        current = self.board[i][j]
+
+        if current == self.ALIVE:
+            if alive_neighbors == 2:
+                return self.ALIVE
+            return self.DEAD
+
+        if current == self.DEAD:
+            if alive_neighbors == 3:
+                return self.ALIVE
+            return self.DEAD
+    
     def next_board_state(self) -> list[list[int]]:
         """Return the next board state given a board, following the classic rules of the game of life."""
         result = self.dead_state(self.board_width, self.board_height)
@@ -322,7 +349,7 @@ class GameOfLife():
         os.system('cls' if os.name == 'nt' else 'clear')
 
 
-GameOfLife(rules=GameOfLife.zombie_rules).start()
+GameOfLife(rules=GameOfLife.von_neumann_rules).start()
 
 
 
