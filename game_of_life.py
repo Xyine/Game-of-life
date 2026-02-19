@@ -8,6 +8,7 @@ from time import sleep
 
 from pydantic import BaseModel, model_validator
 
+from patterns import apply_block_colors, detect_patterns
 from rules import classic_rules, zombie_rules, von_neumann_rules, respawn_rules
 
 
@@ -167,62 +168,6 @@ class GameOfLife():
     def is_valid(self, ni, nj):
         return 0 <= ni < len(self.board) and 0 <= nj < len(self.board[0])
 
-    def detect_block(self, i, j, detected_patterns, used_cells):
-
-        block_cells = [
-            (i, j),
-            (i, j+1),
-            (i+1, j),
-            (i+1, j+1)
-        ]
-
-        for (x, y) in block_cells:
-            if not self.is_valid(x, y):
-                return
-            if self.board[x][y] != self.ALIVE:
-                return
-            if (x, y) in used_cells:
-                return
-
-        for x in range(i-1, i+3):
-            for y in range(j-1, j+3):
-
-                if not self.is_valid(x, y):
-                    continue
-
-                if (x, y) not in block_cells:
-                    if self.board[x][y] != self.DEAD:
-                        return
-
-        detected_patterns.append(("block", block_cells))
-
-        for cell in block_cells:
-            used_cells.add(cell)
-
-    def detect_patterns(self):
-        detected_patterns = []
-        used_cells = set()
-
-        for i in range(self.board_width - 1):
-            for j in range(self.board_height - 1):
-
-                if self.is_valid(i, j) and self.board[i][j] == self.ALIVE:
-                    self.detect_block(i, j, detected_patterns, used_cells)
-
-        return detected_patterns
-
-    def apply_block_colors(self, rendered_str: str, detected_patterns: list) -> str:
-        """ Return str with colored pattern."""
-        grid = [list(row) for row in rendered_str.split("\n")]
-
-        for name, cells in detected_patterns:
-
-            if name == "block":
-                for (i, j) in cells:
-                    grid[i][j] = "🟫"
-
-        return "\n".join("".join(row) for row in grid)
-
     def build_from_coordinates(self, data: BoardFile) -> list[list[int]]:
         """Build a full grid from a coordinate-based board definition."""
 
@@ -295,7 +240,7 @@ class GameOfLife():
         while self.game:
             os.system('cls' if os.name == 'nt' else 'clear')
             if self.colored_patern:
-                print(self.apply_block_colors(self.render(self.board), self.detect_patterns()))
+                print(apply_block_colors(self.render(self.board), detect_patterns(self.board)))
             else:
                 print(self.render(self.board))
             if self.running:
