@@ -8,6 +8,8 @@ from time import sleep
 
 from pydantic import BaseModel, model_validator
 
+from rules import classic_rules, zombie_rules, von_neumann_rules, respawn_rules
+
 
 class BoardFile(BaseModel):
     format: Literal["grid", "coordinates"]
@@ -70,7 +72,7 @@ class GameOfLife():
 
             self.board = self.random_state(self.board_width, self.board_height)
         self.interval_s: float = interval_s
-        self.rules = (rules.__get__(self)) if rules else self.classic_rules
+        self.rules = rules if rules else classic_rules
         self.ever_alive = set()
         self.colored_patern = colored_patern
 
@@ -146,116 +148,6 @@ class GameOfLife():
             "".join(mapping_dead_alive[cell] for cell in row)
             for row in board_state
             )
-
-    def classic_rules(self, i: int, j: int) -> int:
-        """Calcul method of the next state of one cell for the classic rules of the game of life."""
-        alive_neighbors = 0
-
-        for transposition_i, transposition_j in [
-            (-1, -1), (-1, 0),  (-1, 1),
-            (0, -1),            (0, 1),
-            (1, -1), (1, 0),  (1, 1)    
-        ]:
-            new_i = i + transposition_i
-            new_j = j + transposition_j
-
-            if 0 <= new_i < self.board_height and 0 <= new_j < self.board_width:
-                if self.board[new_i][new_j] == self.ALIVE:
-                    alive_neighbors += 1
-        
-        if alive_neighbors == 3 or (self.board[i][j] == self.ALIVE and alive_neighbors == 2):
-            return self.ALIVE
-        return self.DEAD
-
-    def respaw_rules(self, i: int, j: int) -> int:
-        """Classic rules but dead cell have a 20% chance of respawing if they were ever alive."""
-        alive_neighbors = 0
-
-        for transposition_i, transposition_j in [
-            (-1, -1), (-1, 0),  (-1, 1),
-            (0, -1),            (0, 1),
-            (1, -1), (1, 0),  (1, 1)    
-        ]:
-            new_i = i + transposition_i
-            new_j = j + transposition_j
-
-            if 0 <= new_i < self.board_height and 0 <= new_j < self.board_width:
-                if self.board[new_i][new_j] == self.ALIVE:
-                    alive_neighbors += 1
-        
-        if alive_neighbors == 3 or (
-            self.board[i][j] == self.ALIVE and alive_neighbors == 2) or (
-            self.board[i][j] == self.DEAD  and (i, j) in self.ever_alive and random.random() <= 0.01
-        ) :
-            return self.ALIVE
-        
-        return self.DEAD
-
-    def zombie_rules(self, i: int, j: int) -> int:
-        alive_neighbors = 0
-        zombie_neighbors = 0
-
-        for di, dj in [
-            (-1, -1), (-1, 0), (-1, 1),
-            (0, -1),           (0, 1),
-            (1, -1),  (1, 0),  (1, 1)
-        ]:
-            ni = i + di
-            nj = j + dj
-
-            if 0 <= ni < len(self.board) and 0 <= nj < len(self.board[0]):
-                if self.board[ni][nj] == self.ALIVE:
-                    alive_neighbors += 1
-                elif self.board[ni][nj] == self.ZOMBIE:
-                    zombie_neighbors += 1
-
-        current = self.board[i][j]
-
-        if current == self.ALIVE:
-            if random.randint(1, 1000) == 1:
-                return self.ZOMBIE
-            if alive_neighbors == 0 and zombie_neighbors >= 1:
-                return self.ZOMBIE
-
-        if current == self.ALIVE:
-            if alive_neighbors == 2 or alive_neighbors == 3:
-                return self.ALIVE
-            return self.DEAD
-
-        if current == self.DEAD:
-            if alive_neighbors == 3:
-                return self.ALIVE
-            return self.DEAD
-
-        if current == self.ZOMBIE:
-            return self.ZOMBIE
-        
-    def von_neumann_rules(self, i: int, j: int) -> int:
-        alive_neighbors = 0
-
-        for di, dj in [
-            (-1, 0),
-            (0, -1), (0, 1),
-            (1, 0)
-        ]:
-            ni = i + di
-            nj = j + dj
-
-            if 0 <= ni < len(self.board) and 0 <= nj < len(self.board[0]):
-                if self.board[ni][nj] == self.ALIVE:
-                    alive_neighbors += 1
-
-        current = self.board[i][j]
-
-        if current == self.ALIVE:
-            if alive_neighbors == 2:
-                return self.ALIVE
-            return self.DEAD
-
-        if current == self.DEAD:
-            if alive_neighbors == 3:
-                return self.ALIVE
-            return self.DEAD
     
     def next_board_state(self) -> list[list[int]]:
         """Return the next board state given a board, following the classic rules of the game of life."""
@@ -263,7 +155,7 @@ class GameOfLife():
 
         for i in range(self.board_height):
             for j in range(self.board_width):
-                result[i][j] = self.rules(i, j)
+                result[i][j] = self.rules(self.board, i, j, self.ever_alive)
 
         for i in range(self.board_height):
             for j in range(self.board_width):
@@ -367,7 +259,6 @@ class GameOfLife():
             return data.grid
         else:
             return self.build_from_coordinates(data)
-
 
     def pause(self) -> None:
         """Pause the game."""
