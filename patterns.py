@@ -1,6 +1,4 @@
-DEAD = 0
-ALIVE = 1
-ZOMBIE = 2
+from constants import ALIVE, DEAD
 
 
 def detect_block(board, i, j, detected_patterns, used_cells):

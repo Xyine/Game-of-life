@@ -1,4 +1,5 @@
-from game_of_life import next_board_state, DEAD, ALIVE
+from constants import ALIVE, DEAD
+from game_of_life import next_board_state
 
 
 def test_next_board_state_dead_cell_rule():

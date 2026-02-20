@@ -1,9 +1,6 @@
 import random
 
-
-DEAD = 0
-ALIVE = 1
-ZOMBIE = 2
+from constants import ALIVE, DEAD, ZOMBIE
 
 
 def classic_rules(board: list[list[int]], i: int, j: int, ever_alive: set) -> int:

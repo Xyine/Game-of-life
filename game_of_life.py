@@ -8,8 +8,10 @@ from time import sleep
 
 from pydantic import BaseModel, model_validator
 
+from constants import ALIVE, DEAD, ZOMBIE
 from patterns import apply_block_colors, detect_patterns
 from rules import classic_rules, zombie_rules, von_neumann_rules, respawn_rules
+from state import dead_state, next_board_state, random_state
 
 
 class BoardFile(BaseModel):
@@ -47,9 +49,6 @@ class GameOfLife():
         rules: Callable[[int, int], int] | None = None,
         colored_patern: bool = False
     ) -> None:
-        self.DEAD: int = 0
-        self.ALIVE: int = 1
-        self.ZOMBIE: int = 2
         self.running: bool = True
         self.game: bool = False
         if board_file:
@@ -71,7 +70,7 @@ class GameOfLife():
             else:
                 self.board_width, self.board_height = board_width, board_height
 
-            self.board = self.random_state(self.board_width, self.board_height)
+            self.board = random_state(self.board_width, self.board_height)
         self.interval_s: float = interval_s
         self.rules = rules if rules else classic_rules
         self.ever_alive = set()
@@ -79,19 +78,8 @@ class GameOfLife():
 
         for i in range(self.board_height):
             for j in range(self.board_width):
-                if self.board[i][j] == self.ALIVE:
+                if self.board[i][j] == ALIVE:
                     self.ever_alive.add((i, j))
-
-    def dead_state(self, width: int, height: int) -> list[list[int]]:
-        """Return a grid of DEAD cell of size height x width."""
-        return [[self.DEAD for _ in range(width)] for _ in range(height)] 
-
-    def random_state(self, width: int, height: int) -> list[list[int]]:
-        """Return a grid of size height x width filled with random 0/1 values."""
-        return [
-            [random.choice([self.DEAD, self.ALIVE]) for _ in range(width)]
-            for _ in range(height)
-        ]
 
     def integrate_pattern(
         self,
@@ -115,10 +103,10 @@ class GameOfLife():
 
         # Create base board
         if fill_mode == "dead":
-            board = [[self.DEAD for _ in range(board_width)]
+            board = [[DEAD for _ in range(board_width)]
                     for _ in range(board_height)]
         elif fill_mode == "random":
-            board = [[random.choice([self.DEAD, self.ALIVE])
+            board = [[random.choice([DEAD, ALIVE])
                     for _ in range(board_width)]
                     for _ in range(board_height)]
         else:
@@ -143,30 +131,12 @@ class GameOfLife():
 
     def render(self, board_state: list[list[int]]) -> str:
         """Return a visual str of a board state that can be print in the terminal."""
-        mapping_dead_alive: dict[int, str] = {self.DEAD: "⬛", self.ALIVE: "⬜", self.ZOMBIE: "🟩"}
+        mapping_dead_alive: dict[int, str] = {DEAD: "⬛", ALIVE: "⬜", ZOMBIE: "🟩"}
 
         return "\n".join(
             "".join(mapping_dead_alive[cell] for cell in row)
             for row in board_state
             )
-    
-    def next_board_state(self) -> list[list[int]]:
-        """Return the next board state given a board, following the classic rules of the game of life."""
-        result = self.dead_state(self.board_width, self.board_height)
-
-        for i in range(self.board_height):
-            for j in range(self.board_width):
-                result[i][j] = self.rules(self.board, i, j, self.ever_alive)
-
-        for i in range(self.board_height):
-            for j in range(self.board_width):
-                if result[i][j] == self.ALIVE:
-                    self.ever_alive.add((i, j))
-
-        return result
-    
-    def is_valid(self, ni, nj):
-        return 0 <= ni < len(self.board) and 0 <= nj < len(self.board[0])
 
     def build_from_coordinates(self, data: BoardFile) -> list[list[int]]:
         """Build a full grid from a coordinate-based board definition."""
@@ -175,7 +145,7 @@ class GameOfLife():
         height = data.height
         alive_cells = data.alive_cells
 
-        board = [[0 for _ in range(width)] for _ in range(height)]
+        board = dead_state(width, height)
 
         for cell in alive_cells:
             if len(cell) != 2:
@@ -244,7 +214,7 @@ class GameOfLife():
             else:
                 print(self.render(self.board))
             if self.running:
-                self.board = self.next_board_state()
+                self.board, self.ever_alive = next_board_state(self.board, self.rules, self.ever_alive)
             sleep(self.interval_s)
         os.system('cls' if os.name == 'nt' else 'clear')
 
