@@ -40,9 +40,9 @@ class GameOfLife():
 
     def __init__(
         self,
-        board_width: int | None = None,
-        board_height: int | None = None,
-        board_file: str | None = None ,
+        width: int | None = None,
+        height: int | None = None,
+        file: str | None = None ,
         interval_s: float = 0.5,
         fill_mode: str = "dead",
         placement: str = "topleft",
@@ -51,41 +51,50 @@ class GameOfLife():
     ) -> None:
         self.running: bool = True
         self.game: bool = False
-        if board_file:
-            self.board = self.load_state_from_file(board_file)
-            self.board_width = board_width if board_width else len(self.board[0])
-            self.board_height = board_height if board_height else len(self.board)
-            
-            if board_height and board_width:
-                self.board = self.integrate_pattern(
-                    self.board,
-                    self.board_width,
-                    self.board_height,
+        self.board = self.create_board(file, fill_mode, placement, width, height)
+        self.width = len(self.board[0])
+        self.height = len(self.board)
+        self.interval_s = interval_s
+        self.rules = rules if rules else classic_rules
+        self.colored_patern = colored_patern
+        self.ever_alive = self.create_history()
+
+    def create_history(self) -> set:
+        """Create the history of the alive cells."""
+        ever_alive = set()
+    
+        for i in range(self.height):
+            for j in range(self.width):
+                if self.board[i][j] == ALIVE:
+                    ever_alive.add((i, j))
+
+        return ever_alive
+
+    def create_board(self, file: str | None, fill_mode: str, placement: str, width: int | None, height: int | None) -> list[list[int]]:
+        """Create the board."""
+        if file:
+            board = self.load_state_from_file(file)
+
+            if height and width:
+                board = self.integrate_pattern(
+                    board,
+                    width,
+                    height,
                     fill_mode,
                     placement,
                 )
         else:
-            if board_width is None or board_height is None:
-                self.board_width, self.board_height = 50, 40
-            else:
-                self.board_width, self.board_height = board_width, board_height
+            width = width if width else 50
+            height = height if height else 40
+            board = random_state(width, height)
 
-            self.board = random_state(self.board_width, self.board_height)
-        self.interval_s: float = interval_s
-        self.rules = rules if rules else classic_rules
-        self.ever_alive = set()
-        self.colored_patern = colored_patern
-
-        for i in range(self.board_height):
-            for j in range(self.board_width):
-                if self.board[i][j] == ALIVE:
-                    self.ever_alive.add((i, j))
+        return board
 
     def integrate_pattern(
         self,
         pattern: list[list[int]],
-        board_width: int,
-        board_height: int,
+        width: int,
+        height: int,
         fill_mode: str,
         placement: str
     ) -> list[list[int]]:
@@ -94,21 +103,21 @@ class GameOfLife():
         pattern_width = len(pattern[0])
 
         # Refuse if pattern bigger than board
-        if pattern_width > board_width or pattern_height > board_height:
+        if pattern_width > width or pattern_height > height:
             raise ValueError(
                 "Board is smaller than pattern. "
                 f"Pattern size: {pattern_width}x{pattern_height}, "
-                f"Board size: {board_width}x{board_height}"
+                f"Board size: {width}x{height}"
             )
 
         # Create base board
         if fill_mode == "dead":
-            board = [[DEAD for _ in range(board_width)]
-                    for _ in range(board_height)]
+            board = [[DEAD for _ in range(width)]
+                    for _ in range(height)]
         elif fill_mode == "random":
             board = [[random.choice([DEAD, ALIVE])
-                    for _ in range(board_width)]
-                    for _ in range(board_height)]
+                    for _ in range(width)]
+                    for _ in range(height)]
         else:
             raise ValueError("fill_mode must be 'dead' or 'random'")
 
@@ -117,8 +126,8 @@ class GameOfLife():
             offset_y = 0
             offset_x = 0
         elif placement == "center":
-            offset_y = (board_height - pattern_height) // 2
-            offset_x = (board_width - pattern_width) // 2
+            offset_y = (height - pattern_height) // 2
+            offset_x = (width - pattern_width) // 2
         else:
             raise ValueError("placement must be 'topleft' or 'center'")
 
@@ -227,15 +236,15 @@ GameOfLife(colored_patern=True).start()
 
 def next_board_state_optimized(board_state: list[list[int]]) -> list[list[int]]:
     """Calculate next board state with a padding optimisation."""
-    board_height = len(board_state)
-    board_width = len(board_state[0])
+    height = len(board_state)
+    width = len(board_state[0])
 
-    padded = [[DEAD] * (board_width + 2)]
+    padded = [[DEAD] * (width + 2)]
     for row in board_state:
         padded.append([DEAD] + row + [DEAD])
-    padded.append([DEAD] * (board_width + 2))
+    padded.append([DEAD] * (width + 2))
 
-    result = dead_state(board_width, board_height)
+    result = dead_state(width, height)
 
     transposition_list = [
         (-1, -1), (-1, 0), (-1, 1),
@@ -243,8 +252,8 @@ def next_board_state_optimized(board_state: list[list[int]]) -> list[list[int]]:
         (1, -1),  (1, 0),  (1, 1)
     ]
 
-    for i in range(1, board_height + 1):
-        for j in range(1, board_width + 1):
+    for i in range(1, height + 1):
+        for j in range(1, width + 1):
             compt = 0
             for di, dj in transposition_list:
                 if padded[i + di][j + dj] == ALIVE:
