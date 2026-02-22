@@ -3,75 +3,85 @@ import random
 from constants import ALIVE, DEAD, ZOMBIE
 
 
-def classic_rules(board: list[list[int]], i: int, j: int, ever_alive: set) -> int:
-    """Calcul method of the next state of one cell for the classic rules of the game of life."""
-    board_width = len(board[0])
-    board_height = len(board)
-    alive_neighbors = 0
+MOORE_NEIGHBORS = [
+    (-1, -1), (-1, 0), (-1, 1),
+    (0, -1),           (0, 1),
+    (1, -1), (1, 0),   (1, 1)
+]
 
-    for transposition_i, transposition_j in [
-        (-1, -1), (-1, 0),  (-1, 1),
-        (0, -1),            (0, 1),
-        (1, -1), (1, 0),  (1, 1)    
-    ]:
-        new_i = i + transposition_i
-        new_j = j + transposition_j
+VON_NEUMANN_NEIGHBORS = [
+    (-1, 0),
+    (0, -1), (0, 1),
+    (1, 0)
+]
 
-        if 0 <= new_i < board_height and 0 <= new_j < board_width:
-            if board[new_i][new_j] == ALIVE:
-                alive_neighbors += 1
-    
-    if alive_neighbors == 3 or (board[i][j] == ALIVE and alive_neighbors == 2):
-        return ALIVE
-    return DEAD
 
-def respawn_rules(board: list[list[int]], i: int, j: int, ever_alive: set) -> int:
-    """Classic rules but dead cell have a 20% chance of respawing if they were ever alive."""
-    board_width = len(board[0])
-    board_height = len(board)
-    alive_neighbors = 0
+def count_neighbors(board, i, j, neighbors, states_to_count):
+    height = len(board)
+    width = len(board[0])
 
-    for transposition_i, transposition_j in [
-        (-1, -1), (-1, 0),  (-1, 1),
-        (0, -1),            (0, 1),
-        (1, -1), (1, 0),  (1, 1)    
-    ]:
-        new_i = i + transposition_i
-        new_j = j + transposition_j
+    counts = {state: 0 for state in states_to_count}
 
-        if 0 <= new_i < board_height and 0 <= new_j < board_width:
-            if board[new_i][new_j] == ALIVE:
-                alive_neighbors += 1
-    
-    if alive_neighbors == 3 or (
-        board[i][j] == ALIVE and alive_neighbors == 2) or (
-        board[i][j] == DEAD  and (i, j) in ever_alive and random.random() <= 0.01
-    ) :
-        return ALIVE
-    
-    return DEAD
-
-def zombie_rules(board: list[list[int]], i: int, j: int, ever_alive: set) -> int:
-    board_width = len(board[0])
-    board_height = len(board)
-    alive_neighbors = 0
-    zombie_neighbors = 0
-
-    for di, dj in [
-        (-1, -1), (-1, 0), (-1, 1),
-        (0, -1),           (0, 1),
-        (1, -1),  (1, 0),  (1, 1)
-    ]:
+    for di, dj in neighbors:
         ni = i + di
         nj = j + dj
 
-        if 0 <= ni < board_width and 0 <= nj < board_height:
-            if board[ni][nj] == ALIVE:
-                alive_neighbors += 1
-            elif board[ni][nj] == ZOMBIE:
-                zombie_neighbors += 1
+        if 0 <= ni < height and 0 <= nj < width:
+            cell = board[ni][nj]
+            if cell in counts:
+                counts[cell] += 1
+
+    return counts
+
+
+def classic_logic(cell, alive_neighbors):
+    if alive_neighbors == 3 or (cell == ALIVE and alive_neighbors == 2):
+        return ALIVE
+    return DEAD
+
+
+def classic_rules(board, i, j, ever_alive):
+    """Calcul method of the next state of one cell for the classic rules of the game of life."""
+    counts = count_neighbors(
+        board, i, j,
+        MOORE_NEIGHBORS,
+        {ALIVE}
+    )
+
+    return classic_logic(board[i][j], counts[ALIVE])
+
+
+def respawn_rules(board, i, j, ever_alive):
+    """Dead cell have a 20% chance of respawing if they were ever alive."""
+    counts = count_neighbors(
+        board, i, j,
+        MOORE_NEIGHBORS,
+        {ALIVE}
+    )
 
     current = board[i][j]
+    alive_neighbors = counts[ALIVE]
+
+    if (
+        current == DEAD
+        and (i, j) in ever_alive
+        and random.random() <= 0.01
+    ):
+        return ALIVE
+
+    return classic_logic(current, alive_neighbors)
+
+
+def zombie_rules(board, i, j, ever_alive):
+    counts = count_neighbors(
+        board, i, j,
+        MOORE_NEIGHBORS,
+        {ALIVE, ZOMBIE}
+    )
+
+    current = board[i][j]
+    alive_neighbors = counts[ALIVE]
+    zombie_neighbors = counts[ZOMBIE]
 
     if current == ALIVE:
         if random.randint(1, 1000) == 1:
@@ -79,44 +89,24 @@ def zombie_rules(board: list[list[int]], i: int, j: int, ever_alive: set) -> int
         if alive_neighbors == 0 and zombie_neighbors >= 1:
             return ZOMBIE
 
-    if current == ALIVE:
-        if alive_neighbors == 2 or alive_neighbors == 3:
-            return ALIVE
-        return DEAD
-
-    if current == DEAD:
-        if alive_neighbors == 3:
-            return ALIVE
-        return DEAD
-
     if current == ZOMBIE:
         return ZOMBIE
-    
-def von_neumann_rules(board: list[list[int]], i: int, j: int, ever_alive: set) -> int:
-    board_width = len(board[0])
-    board_height = len(board)
-    alive_neighbors = 0
 
-    for di, dj in [
-        (-1, 0),
-        (0, -1), (0, 1),
-        (1, 0)
-    ]:
-        ni = i + di
-        nj = j + dj
+    return classic_logic(current, alive_neighbors)
 
-        if 0 <= ni < board_height and 0 <= nj < board_width:
-            if board[ni][nj] == ALIVE:
-                alive_neighbors += 1
+
+def von_neumann_rules(board, i, j, ever_alive):
+    counts = count_neighbors(
+        board, i, j,
+        VON_NEUMANN_NEIGHBORS,
+        {ALIVE}
+    )
 
     current = board[i][j]
+    alive_neighbors = counts[ALIVE]
 
     if current == ALIVE:
-        if alive_neighbors == 2:
-            return ALIVE
-        return DEAD
+        return ALIVE if alive_neighbors == 2 else DEAD
 
     if current == DEAD:
-        if alive_neighbors == 3:
-            return ALIVE
-        return DEAD
+        return ALIVE if alive_neighbors == 3 else DEAD

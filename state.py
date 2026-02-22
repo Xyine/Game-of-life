@@ -21,13 +21,16 @@ def next_board_state(board: list[list[int]], rule: Callable[[int, int], int], ev
     height = len(board)
     result = dead_state(width, height)
 
-    for i in range(height):
-        for j in range(width):
-            result[i][j] = rule(board, i, j, ever_alive)
+    new_alive_cells = []
 
     for i in range(height):
         for j in range(width):
-            if result[i][j] == ALIVE:
-                ever_alive.add((i, j))
+            cell_state = rule(board, i, j, ever_alive)
+            if cell_state == ALIVE:
+                new_alive_cells.append((i,j))
+            result[i][j] = cell_state
+
+
+    ever_alive.update(new_alive_cells)
 
     return result, ever_alive
