@@ -1,6 +1,6 @@
 import json
 import random
-from typing import Literal, Optional
+from typing import Callable, Literal, Optional
 
 from pydantic import BaseModel, model_validator
 from constants import ALIVE, DEAD
@@ -29,8 +29,10 @@ class BoardFile(BaseModel):
         return self
 
 
-def create_history(board, width, height) -> set:
+def create_history(board: Callable[[int, int], int]) -> set:
     """Create the history of the alive cells."""
+    width = len(board[0])
+    height = len(board)
     ever_alive = set()
 
     for i in range(height):

@@ -1,4 +1,5 @@
 import random
+from typing import Callable
 
 from constants import ALIVE, DEAD
 
@@ -14,7 +15,7 @@ def random_state(width: int, height: int) -> list[list[int]]:
         for _ in range(height)
     ]
 
-def next_board_state(board, rule, ever_alive) -> tuple[list[list[int]], set[tuple[int, int]]]:
+def next_board_state(board: list[list[int]], rule: Callable[[int, int], int], ever_alive: set) -> tuple[list[list[int]], set[tuple[int, int]]]:
     """Return the next board state given a board, following the classic rules of the game of life."""
     width = len(board[0])
     height = len(board)

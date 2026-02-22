@@ -32,7 +32,7 @@ class GameOfLife():
         self.interval_s = interval_s
         self.rules = rules if rules else classic_rules
         self.colored_patern = colored_patern
-        self.ever_alive = create_history(self.board, self.width, self.height)
+        self.ever_alive = create_history(self.board)
 
     def pause(self) -> None:
         """Pause the game."""
