@@ -6,7 +6,8 @@ from time import sleep
 
 from board import create_board, create_history
 from constants import ALIVE, DEAD, ZOMBIE
-from patterns import apply_pattern_colors, detect_patterns
+from patterns import detect_patterns
+from render import apply_pattern_colors, render
 from rules import classic_rules, zombie_rules, von_neumann_rules, respawn_rules
 from state import dead_state, next_board_state
 
@@ -46,15 +47,6 @@ class GameOfLife():
         """Stop the game."""
         self.game = False
 
-    def render(self, board_state: list[list[int]]) -> str:
-        """Return a visual str of a board state that can be print in the terminal."""
-        mapping_dead_alive: dict[int, str] = {DEAD: "⬛", ALIVE: "⬜", ZOMBIE: "🟩"}
-
-        return "\n".join(
-            "".join(mapping_dead_alive[cell] for cell in row)
-            for row in board_state
-            )
-
     def listen_keyboard(self) -> None:
         """Listen for space imput on keyboard."""
         while self.game:
@@ -78,9 +70,9 @@ class GameOfLife():
         while self.game:
             os.system('cls' if os.name == 'nt' else 'clear')
             if self.paterns:
-                print(apply_pattern_colors(self.render(self.board), detect_patterns(self.board)))
+                print(apply_pattern_colors(render(self.board), detect_patterns(self.board)))
             else:
-                print(self.render(self.board))
+                print(render(self.board))
             if self.running:
                 self.board, self.ever_alive = next_board_state(self.board, self.rules, self.ever_alive)
             sleep(self.interval_s)

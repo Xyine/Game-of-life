@@ -117,19 +117,3 @@ def detect_patterns(board):
                     detected_patterns.append(pattern)
 
     return detected_patterns
-
-def apply_pattern_colors(rendered_board: str, detected_patterns: list) -> str:
-    """ Return str with colored pattern."""
-    grid = [list(row) for row in rendered_board.split("\n")]
-
-    for name, cells in detected_patterns:
-
-        if name == "block":
-            for (i, j) in cells:
-                grid[i][j] = "🟫"
-
-        if name == "blinker":
-            for (i, j) in cells:
-                grid[i][j] = "🟦"
-
-    return "\n".join("".join(row) for row in grid)
