@@ -6,7 +6,7 @@ from time import sleep
 
 from board import create_board, create_history
 from constants import ALIVE, DEAD, ZOMBIE
-from patterns import apply_block_colors, detect_patterns
+from patterns import apply_pattern_colors, detect_patterns
 from rules import classic_rules, zombie_rules, von_neumann_rules, respawn_rules
 from state import dead_state, next_board_state
 
@@ -22,7 +22,7 @@ class GameOfLife():
         fill_mode: str = "dead",
         placement: str = "topleft",
         rules: Callable[[int, int], int] | None = None,
-        colored_patern: bool = False
+        paterns: bool = False
     ) -> None:
         self.running: bool = True
         self.game: bool = False
@@ -31,7 +31,7 @@ class GameOfLife():
         self.height = len(self.board)
         self.interval_s = interval_s
         self.rules = rules if rules else classic_rules
-        self.colored_patern = colored_patern
+        self.paterns = paterns
         self.ever_alive = create_history(self.board)
 
     def pause(self) -> None:
@@ -77,8 +77,8 @@ class GameOfLife():
 
         while self.game:
             os.system('cls' if os.name == 'nt' else 'clear')
-            if self.colored_patern:
-                print(apply_block_colors(self.render(self.board), detect_patterns(self.board)))
+            if self.paterns:
+                print(apply_pattern_colors(self.render(self.board), detect_patterns(self.board)))
             else:
                 print(self.render(self.board))
             if self.running:
