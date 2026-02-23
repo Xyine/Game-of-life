@@ -1,7 +1,7 @@
 from constants import ALIVE, DEAD, ZOMBIE
 
 
-def render(self, board_state: list[list[int]]) -> str:
+def render(board_state: list[list[int]]) -> str:
     """Return a visual str of a board state that can be print in the terminal."""
     mapping_dead_alive: dict[int, str] = {DEAD: "⬛", ALIVE: "⬜", ZOMBIE: "🟩"}
 
