@@ -1,6 +1,13 @@
+from dataclasses import dataclass
 from typing import Optional
 
 from constants import ALIVE, DEAD
+
+
+@dataclass
+class Pattern:
+    name: str
+    cells: list[tuple[int, int]]
 
 
 def detect_block(board: list[list[int]], i: int, j: int, used_cells: set) -> Optional[tuple[str, list[tuple[int, int]]]]:
@@ -31,7 +38,7 @@ def detect_block(board: list[list[int]], i: int, j: int, used_cells: set) -> Opt
     for cell in block_cells:
         used_cells.add(cell)
     
-    return ("block", block_cells)
+    return Pattern("block", block_cells)
 
 def _detect_horizontal_blinker(board: list[list[int]], i: int, j: int, used_cells: set) -> Optional[tuple[str, list[tuple[int, int]]]]:
     horrizontal_blinker_cells = [
@@ -59,7 +66,7 @@ def _detect_horizontal_blinker(board: list[list[int]], i: int, j: int, used_cell
     for cell in horrizontal_blinker_cells:
         used_cells.add(cell)
     
-    return ("blinker", horrizontal_blinker_cells)
+    return Pattern("blinker", horrizontal_blinker_cells)
 
 def _detect_vertical_blinker(board: list[list[int]], i: int, j: int, used_cells: set) -> Optional[tuple[str, list[tuple[int, int]]]]:
     vertical_blinker_cell = [
@@ -89,7 +96,7 @@ def _detect_vertical_blinker(board: list[list[int]], i: int, j: int, used_cells:
     for cell in vertical_blinker_cell:
         used_cells.add(cell)
     
-    return ("blinker", vertical_blinker_cell)
+    return Pattern("blinker", vertical_blinker_cell)
 
 def detect_blinker(board: list[list[int]], i: int, j: int, used_cells: set) -> Optional[tuple[str, list[tuple[int, int]]]]:
     horizontal = _detect_horizontal_blinker(board, i, j, used_cells)

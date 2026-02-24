@@ -1,4 +1,5 @@
 from constants import ALIVE, DEAD, ZOMBIE
+from patterns import Pattern
 
 
 def render(board_state: list[list[int]]) -> str:
@@ -10,18 +11,18 @@ def render(board_state: list[list[int]]) -> str:
         for row in board_state
         )
 
-def apply_pattern_colors(rendered_board: str, detected_patterns: list) -> str:
+def apply_pattern_colors(rendered_board: str, detected_patterns: list[Pattern]) -> str:
     """ Return str with colored pattern."""
     grid = [list(row) for row in rendered_board.split("\n")]
 
-    for name, cells in detected_patterns:
+    for pattern in detected_patterns:
 
-        if name == "block":
-            for (i, j) in cells:
+        if pattern.name == "block":
+            for (i, j) in pattern.cells:
                 grid[i][j] = "🟫"
 
-        if name == "blinker":
-            for (i, j) in cells:
+        if pattern.name == "blinker":
+            for (i, j) in pattern.cells:
                 grid[i][j] = "🟦"
 
     return "\n".join("".join(row) for row in grid)
