@@ -35,6 +35,13 @@ class GameOfLife():
         self.paterns = paterns
         self.ever_alive = create_history(self.board)
 
+    def step(self):
+        self.board, self.ever_alive = next_board_state(
+            self.board,
+            self.rules,
+            self.ever_alive
+        )
+
     def pause(self) -> None:
         """Pause the game."""
         self.running = False
@@ -79,8 +86,7 @@ class GameOfLife():
         os.system('cls' if os.name == 'nt' else 'clear')
 
 
-GameOfLife(colored_patern=True).start()
-
+# GameOfLife(paterns=True).start()
 
 
 #========================== OPTIMISATION CORNER ===========================================
