@@ -1,5 +1,7 @@
 import pygame
+from constants import ALIVE, ZOMBIE, DEAD
 from game_of_life import GameOfLife
+from rules import classic_rules, zombie_rules, von_neumann_rules, respawn_rules
 import time
 
 CELL_SIZE = 15
@@ -10,6 +12,10 @@ WINDOW_WIDTH = 1000
 WINDOW_HEIGHT = 600
 UI_WIDTH = 200
 GAME_WIDTH = WINDOW_WIDTH - UI_WIDTH
+CELL_COLORS = {
+    ALIVE: (255, 255, 255),   # blanc
+    ZOMBIE: (0, 200, 0)       # vert
+}
 
 engine = None
 board = None
@@ -43,6 +49,15 @@ BOARD_SIZES = {
 
 current_board_size = "Medium"
 
+RULES = {
+    "Classic": classic_rules,
+    "Zombie": zombie_rules,
+    "Von Neumann": von_neumann_rules,
+    "Respawn": respawn_rules
+}
+
+current_rule = "Classic"
+
 start_button = pygame.Rect(
     GAME_WIDTH + MARGIN,
     MARGIN,
@@ -74,6 +89,13 @@ size_buttons = {
     "Small": pygame.Rect(50, 220, BUTTON_WIDTH, BUTTON_HEIGHT),
     "Medium": pygame.Rect(50, 220 + BUTTON_HEIGHT + MARGIN, BUTTON_WIDTH, BUTTON_HEIGHT),
     "Big": pygame.Rect(50, 220 + 2*(BUTTON_HEIGHT + MARGIN), BUTTON_WIDTH, BUTTON_HEIGHT)
+}
+
+rule_buttons = {
+    "Classic": pygame.Rect(50, 380, BUTTON_WIDTH, BUTTON_HEIGHT),
+    "Zombie": pygame.Rect(50, 380 + BUTTON_HEIGHT + MARGIN, BUTTON_WIDTH, BUTTON_HEIGHT),
+    "Von Neumann": pygame.Rect(50, 380 + 2*(BUTTON_HEIGHT + MARGIN), BUTTON_WIDTH, BUTTON_HEIGHT),
+    "Respawn": pygame.Rect(50, 380 + 3*(BUTTON_HEIGHT + MARGIN), BUTTON_WIDTH, BUTTON_HEIGHT)
 }
 
 font = pygame.font.Font(None, 30)
@@ -111,6 +133,17 @@ def draw_size_buttons():
         text = font.render(name, True, (255, 255, 255))
         screen.blit(text, (rect.x + 10, rect.y + 5))
 
+def draw_rule_buttons():
+    label = font.render("Rules", True, (255, 255, 255))
+    screen.blit(label, (50, 350))
+
+    for name, rect in rule_buttons.items():
+        color = (0, 200, 0) if current_rule == name else (150, 150, 150)
+        pygame.draw.rect(screen, color, rect)
+        text = font.render(name, True, (255, 255, 255))
+        screen.blit(text, (rect.x + 10, rect.y + 5))
+
+
 while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -120,7 +153,8 @@ while running:
                 paused = not paused
                 if engine is None:
                     width, height = BOARD_SIZES[current_board_size]
-                    engine = GameOfLife(width=width, height=height)
+                    rules = RULES[current_rule]
+                    engine = GameOfLife(width=width, height=height, rules=rules)
                     board = engine.board
                     rows = len(board)
                     cols = len(board[0])
@@ -135,7 +169,9 @@ while running:
                 for name, rect in size_buttons.items():
                     if rect.collidepoint(event.pos) and engine is None:
                         current_board_size = name
-                        
+                for name, rect in rule_buttons.items():
+                    if rect.collidepoint(event.pos) and engine is None:
+                        current_rule = name
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_LEFT:
                 offset_x -= SCROLL_SPEED
@@ -158,14 +194,16 @@ while running:
     if current_view == "game" and board is not None:
         for i, row in enumerate(board):
             for j, cell in enumerate(row):
-                if cell == 1:
+                if cell != DEAD:
+                    color = CELL_COLORS.get(cell, (255, 0, 0))
+
                     x = j * CELL_SIZE - offset_x
                     y = i * CELL_SIZE - offset_y
 
                     if -CELL_SIZE < x < GAME_WIDTH and -CELL_SIZE < y < WINDOW_HEIGHT:
                         pygame.draw.rect(
                             screen,
-                            (255, 255, 255),
+                            color,
                             (x, y, CELL_SIZE, CELL_SIZE)
                         )
 
@@ -180,6 +218,7 @@ while running:
         screen.fill((20, 20, 20))
         draw_speed_buttons()
         draw_size_buttons()
+        draw_rule_buttons()
 
     pygame.draw.rect(
         screen,
