@@ -73,16 +73,23 @@ start_button = pygame.Rect(
     BUTTON_HEIGHT
 )
 
-exit_button = pygame.Rect(
+settings_button = pygame.Rect(
     GAME_WIDTH + MARGIN,
     MARGIN*2 + BUTTON_HEIGHT,
     UI_WIDTH - 2*MARGIN,
     BUTTON_HEIGHT
 )
 
-settings_button = pygame.Rect(
+reset_button = pygame.Rect(
     GAME_WIDTH + MARGIN,
     MARGIN*3 + BUTTON_HEIGHT*2,
+    UI_WIDTH - 2*MARGIN,
+    BUTTON_HEIGHT
+)
+
+exit_button = pygame.Rect(
+    GAME_WIDTH + MARGIN,
+    MARGIN*4 + BUTTON_HEIGHT*3,
     UI_WIDTH - 2*MARGIN,
     BUTTON_HEIGHT
 )
@@ -136,6 +143,11 @@ def draw_buttons():
     text = font.render("Settings", True, (255, 255, 255))
     screen.blit(text, (settings_button.x + 5, settings_button.y + 5))
 
+    # Reset
+    pygame.draw.rect(screen, (200, 100, 0), reset_button)
+    text = font.render("Reset", True, (255, 255, 255))
+    screen.blit(text, (reset_button.x + 15, reset_button.y + 5))
+
 def draw_speed_buttons():
     for name, rect in speed_buttons.items():
         color = (0, 200, 0) if current_speed == name else (150, 150, 150)
@@ -184,6 +196,15 @@ while running:
                 running = False
             elif settings_button.collidepoint(event.pos):
                 current_view = "settings" if current_view == "game" else "game"
+            elif reset_button.collidepoint(event.pos) and engine is not None:
+                engine = None
+                board = None
+                rows = 0
+                cols = 0
+                offset_x = 0
+                offset_y = 0
+                paused = True
+                last_update = time.time()
             elif current_view == "settings":
                 for name, rect in speed_buttons.items():
                     if rect.collidepoint(event.pos):
