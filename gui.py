@@ -16,6 +16,7 @@ CELL_COLORS = {
     ALIVE: (255, 255, 255),   # blanc
     ZOMBIE: (0, 200, 0)       # vert
 }
+SCROLL_SPEED = 20
 
 engine = None
 board = None
@@ -23,7 +24,6 @@ rows = 0
 cols = 0
 offset_x = 0
 offset_y = 0
-SCROLL_SPEED = 20
 
 pygame.init()
 
@@ -58,6 +58,14 @@ RULES = {
 
 current_rule = "Classic"
 
+BOARD_FILES = {
+    "Blinker": "board_file/blinker.json",
+    "Pulsar": "board_file/pulsar.json",
+    "LWS": "board_file/lws.json"
+}
+
+current_file = None
+
 start_button = pygame.Rect(
     GAME_WIDTH + MARGIN,
     MARGIN,
@@ -79,24 +87,36 @@ settings_button = pygame.Rect(
     BUTTON_HEIGHT
 )
 
-speed_buttons = {
-    "Fast": pygame.Rect(50, 50, BUTTON_WIDTH, BUTTON_HEIGHT),
-    "Medium": pygame.Rect(50, 50 + BUTTON_HEIGHT + MARGIN, BUTTON_WIDTH, BUTTON_HEIGHT),
-    "Slow": pygame.Rect(50, 50 + 2*(BUTTON_HEIGHT + MARGIN), BUTTON_WIDTH, BUTTON_HEIGHT)
-}
+def create_horizontal_buttons(labels, start_y):
+    buttons = {}
+    start_x = 50
+    spacing_x = BUTTON_WIDTH + MARGIN
 
-size_buttons = {
-    "Small": pygame.Rect(50, 220, BUTTON_WIDTH, BUTTON_HEIGHT),
-    "Medium": pygame.Rect(50, 220 + BUTTON_HEIGHT + MARGIN, BUTTON_WIDTH, BUTTON_HEIGHT),
-    "Big": pygame.Rect(50, 220 + 2*(BUTTON_HEIGHT + MARGIN), BUTTON_WIDTH, BUTTON_HEIGHT)
-}
+    for i, name in enumerate(labels):
+        x = start_x + i * spacing_x
+        buttons[name] = pygame.Rect(x, start_y, BUTTON_WIDTH, BUTTON_HEIGHT)
 
-rule_buttons = {
-    "Classic": pygame.Rect(50, 380, BUTTON_WIDTH, BUTTON_HEIGHT),
-    "Zombie": pygame.Rect(50, 380 + BUTTON_HEIGHT + MARGIN, BUTTON_WIDTH, BUTTON_HEIGHT),
-    "Von Neumann": pygame.Rect(50, 380 + 2*(BUTTON_HEIGHT + MARGIN), BUTTON_WIDTH, BUTTON_HEIGHT),
-    "Respawn": pygame.Rect(50, 380 + 3*(BUTTON_HEIGHT + MARGIN), BUTTON_WIDTH, BUTTON_HEIGHT)
-}
+    return buttons
+
+speed_buttons = create_horizontal_buttons(
+    ["Fast", "Medium", "Slow"],
+    start_y=60
+)
+
+size_buttons = create_horizontal_buttons(
+    ["Small", "Medium", "Big"],
+    start_y=160
+)
+
+rule_buttons = create_horizontal_buttons(
+    ["Classic", "Zombie", "Von Neumann", "Respawn"],
+    start_y=260
+)
+
+file_buttons = create_horizontal_buttons(
+    ["Blinker", "Pulsar", "LWS"],
+    start_y=360
+)
 
 font = pygame.font.Font(None, 30)
 
@@ -124,9 +144,6 @@ def draw_speed_buttons():
         screen.blit(text, (rect.x + 10, rect.y + 5))
 
 def draw_size_buttons():
-    label = font.render("Board Size", True, (255, 255, 255))
-    screen.blit(label, (50, 190))
-
     for name, rect in size_buttons.items():
         color = (0, 200, 0) if current_board_size == name else (150, 150, 150)
         pygame.draw.rect(screen, color, rect)
@@ -134,11 +151,15 @@ def draw_size_buttons():
         screen.blit(text, (rect.x + 10, rect.y + 5))
 
 def draw_rule_buttons():
-    label = font.render("Rules", True, (255, 255, 255))
-    screen.blit(label, (50, 350))
-
     for name, rect in rule_buttons.items():
         color = (0, 200, 0) if current_rule == name else (150, 150, 150)
+        pygame.draw.rect(screen, color, rect)
+        text = font.render(name, True, (255, 255, 255))
+        screen.blit(text, (rect.x + 10, rect.y + 5))
+
+def draw_file_buttons():
+    for name, rect in file_buttons.items():
+        color = (0, 200, 0) if current_file == name else (150, 150, 150)
         pygame.draw.rect(screen, color, rect)
         text = font.render(name, True, (255, 255, 255))
         screen.blit(text, (rect.x + 10, rect.y + 5))
@@ -154,7 +175,8 @@ while running:
                 if engine is None:
                     width, height = BOARD_SIZES[current_board_size]
                     rules = RULES[current_rule]
-                    engine = GameOfLife(width=width, height=height, rules=rules)
+                    file = BOARD_FILES[current_file] if current_file else None
+                    engine = GameOfLife(width=width, height=height, rules=rules, file=file)
                     board = engine.board
                     rows = len(board)
                     cols = len(board[0])
@@ -172,6 +194,9 @@ while running:
                 for name, rect in rule_buttons.items():
                     if rect.collidepoint(event.pos) and engine is None:
                         current_rule = name
+                for name, rect in file_buttons.items():
+                    if rect.collidepoint(event.pos) and engine is None:
+                        current_file = name
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_LEFT:
                 offset_x -= SCROLL_SPEED
@@ -216,9 +241,16 @@ while running:
 
     elif current_view == "settings":
         screen.fill((20, 20, 20))
+
+        screen.blit(font.render("Speed", True, (255,255,255)), (50, 30))
+        screen.blit(font.render("Board Size", True, (255,255,255)), (50, 130))
+        screen.blit(font.render("Rules", True, (255,255,255)), (50, 230))
+        screen.blit(font.render("Patterns", True, (255,255,255)), (50, 330))
+        
         draw_speed_buttons()
         draw_size_buttons()
         draw_rule_buttons()
+        draw_file_buttons()
 
     pygame.draw.rect(
         screen,
