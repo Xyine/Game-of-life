@@ -17,7 +17,12 @@ CELL_COLORS = {
     ZOMBIE: (0, 200, 0)       # vert
 }
 SCROLL_SPEED = 20
+MIN_CELL_SIZE = 5
+MAX_CELL_SIZE = 60
+ZOOM_FACTOR = 2
 
+
+cell_size = CELL_SIZE
 engine = None
 board = None
 rows = 0
@@ -227,12 +232,23 @@ while running:
                 offset_y -= SCROLL_SPEED
             elif event.key == pygame.K_DOWN:
                 offset_y += SCROLL_SPEED
+        elif event.type == pygame.MOUSEWHEEL:
+            old_size = cell_size
 
+            if event.y > 0:  # zoom in
+                cell_size = min(int(cell_size * ZOOM_FACTOR), MAX_CELL_SIZE)
+            elif event.y < 0:  # zoom out
+                cell_size = max(int(cell_size / ZOOM_FACTOR), MIN_CELL_SIZE)
+
+            scale = cell_size / old_size
+            offset_x = int((offset_x + mouse_x) * scale - mouse_x)
+            offset_y = int((offset_y + mouse_y) * scale - mouse_y)
+        mouse_x, mouse_y = pygame.mouse.get_pos()
     screen.fill((0, 0, 0))
     
     if board is not None:
-        max_x = len(board[0]) * CELL_SIZE - GAME_WIDTH
-        max_y = len(board) * CELL_SIZE - WINDOW_HEIGHT
+        max_x = max(0, len(board[0]) * cell_size - GAME_WIDTH)
+        max_y = max(0, len(board) * cell_size - WINDOW_HEIGHT)
 
         offset_x = max(0, min(offset_x, max_x))
         offset_y = max(0, min(offset_y, max_y))
@@ -243,14 +259,14 @@ while running:
                 if cell != DEAD:
                     color = CELL_COLORS.get(cell, (255, 0, 0))
 
-                    x = j * CELL_SIZE - offset_x
-                    y = i * CELL_SIZE - offset_y
+                    x = j * cell_size - offset_x
+                    y = i * cell_size - offset_y
 
                     if -CELL_SIZE < x < GAME_WIDTH and -CELL_SIZE < y < WINDOW_HEIGHT:
                         pygame.draw.rect(
                             screen,
                             color,
-                            (x, y, CELL_SIZE, CELL_SIZE)
+                            (x, y, cell_size, cell_size)
                         )
 
         if not paused:
