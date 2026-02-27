@@ -86,7 +86,8 @@ class GameOfLife():
         os.system('cls' if os.name == 'nt' else 'clear')
 
 
-# GameOfLife(paterns=True).start()
+if __name__ == "__main__":
+    GameOfLife().start()
 
 
 #========================== OPTIMISATION CORNER ===========================================
