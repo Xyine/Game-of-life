@@ -3,7 +3,7 @@ import random
 from typing import Callable, Literal, Optional
 
 from pydantic import BaseModel, model_validator
-from constants import ALIVE, DEAD
+from config import Config
 from state import dead_state, random_state
 
 
@@ -30,14 +30,14 @@ class BoardFile(BaseModel):
 
 
 def create_history(board: Callable[[int, int], int]) -> set:
-    """Create the history of the alive cells."""
+    """Create the history of the ALIVE cells."""
     width = len(board[0])
     height = len(board)
     ever_alive = set()
 
     for i in range(height):
         for j in range(width):
-            if board[i][j] == ALIVE:
+            if board[i][j] == Config.ALIVE:
                 ever_alive.add((i, j))
 
     return ever_alive
@@ -82,15 +82,15 @@ def integrate_pattern(
         )
 
     # Create base board
-    if fill_mode == "dead":
-        board = [[DEAD for _ in range(width)]
+    if fill_mode == "DEAD":
+        board = [[Config.DEAD for _ in range(width)]
                 for _ in range(height)]
     elif fill_mode == "random":
-        board = [[random.choice([DEAD, ALIVE])
+        board = [[random.choice([Config.DEAD, Config.ALIVE])
                 for _ in range(width)]
                 for _ in range(height)]
     else:
-        raise ValueError("fill_mode must be 'dead' or 'random'")
+        raise ValueError("fill_mode must be 'DEAD' or 'random'")
 
     # Place pattern in top-left corner
     if placement == "topleft":
@@ -120,17 +120,17 @@ def build_from_coordinates(data: BoardFile) -> list[list[int]]:
 
     for cell in alive_cells:
         if len(cell) != 2:
-            raise ValueError("Each alive cell must contain exactly two integers")
+            raise ValueError("Each ALIVE cell must contain exactly two integers")
 
         row, col = cell
 
         if not (0 <= row < height and 0 <= col < width):
             raise ValueError(
-                f"Alive cell ({row}, {col}) is outside board bounds "
+                f"ALIVE cell ({row}, {col}) is outside board bounds "
                 f"(height={height}, width={width})"
             )
 
-        board[row][col] = ALIVE
+        board[row][col] = Config.ALIVE
 
     return board
 

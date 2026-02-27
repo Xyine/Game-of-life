@@ -1,17 +1,17 @@
 import random
 from typing import Callable
 
-from constants import ALIVE, DEAD
+from config import Config
 
 
 def dead_state(width: int, height: int) -> list[list[int]]:
     """Return a grid of DEAD cell of size height x width."""
-    return [[DEAD for _ in range(width)] for _ in range(height)] 
+    return [[Config.DEAD for _ in range(width)] for _ in range(height)] 
 
 def random_state(width: int, height: int) -> list[list[int]]:
     """Return a grid of size height x width filled with random 0/1 values."""
     return [
-        [random.choice([DEAD, ALIVE]) for _ in range(width)]
+        [random.choice([Config.DEAD, Config.ALIVE]) for _ in range(width)]
         for _ in range(height)
     ]
 
@@ -26,7 +26,7 @@ def next_board_state(board: list[list[int]], rule: Callable[[int, int], int], ev
     for i in range(height):
         for j in range(width):
             cell_state = rule(board, i, j, ever_alive)
-            if cell_state == ALIVE:
+            if cell_state == Config.ALIVE:
                 new_alive_cells.append((i,j))
             result[i][j] = cell_state
 

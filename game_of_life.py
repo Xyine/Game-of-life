@@ -5,7 +5,7 @@ import keyboard
 from time import sleep
 
 from board import create_board, create_history
-from constants import ALIVE, DEAD, ZOMBIE
+from config import Config
 from patterns import detect_patterns
 from render import apply_pattern_colors, render
 from rules import classic_rules, zombie_rules, von_neumann_rules, respawn_rules
@@ -18,9 +18,9 @@ class GameOfLife():
         self,
         width: int | None = None,
         height: int | None = None,
-        file: str | None = None ,
+        file: str | None = None,
         interval_s: float = 0.5,
-        fill_mode: str = "dead",
+        fill_mode: str = "DEAD",
         placement: str = "topleft",
         rules: Callable[[int, int], int] | None = None,
         paterns: bool = False
@@ -96,10 +96,10 @@ def next_board_state_optimized(board_state: list[list[int]]) -> list[list[int]]:
     height = len(board_state)
     width = len(board_state[0])
 
-    padded = [[DEAD] * (width + 2)]
+    padded = [[Config.DEAD] * (width + 2)]
     for row in board_state:
-        padded.append([DEAD] + row + [DEAD])
-    padded.append([DEAD] * (width + 2))
+        padded.append([Config.DEAD] + row + [Config.DEAD])
+    padded.append([Config.DEAD] * (width + 2))
 
     result = dead_state(width, height)
 
@@ -113,10 +113,10 @@ def next_board_state_optimized(board_state: list[list[int]]) -> list[list[int]]:
         for j in range(1, width + 1):
             compt = 0
             for di, dj in transposition_list:
-                if padded[i + di][j + dj] == ALIVE:
+                if padded[i + di][j + dj] == Config.ALIVE:
                     compt += 1
 
-            if compt == 3 or (padded[i][j] == ALIVE and compt == 2):
-                result[i - 1][j - 1] = ALIVE
+            if compt == 3 or (padded[i][j] == Config.ALIVE and compt == 2):
+                result[i - 1][j - 1] = Config.ALIVE
 
     return result

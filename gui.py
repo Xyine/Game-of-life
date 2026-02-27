@@ -1,38 +1,21 @@
 import pygame
-from constants import ALIVE, ZOMBIE, DEAD
+from config import Config
 from game_of_life import GameOfLife
 from rules import classic_rules, zombie_rules, von_neumann_rules, respawn_rules
 import time
 
-CELL_SIZE = 15
-BUTTON_HEIGHT = 40
-BUTTON_WIDTH = 100
-MARGIN = 10
-WINDOW_WIDTH = 1000
-WINDOW_HEIGHT = 600
-UI_WIDTH = 200
-GAME_WIDTH = WINDOW_WIDTH - UI_WIDTH
-CELL_COLORS = {
-    ALIVE: (255, 255, 255),   # blanc
-    ZOMBIE: (0, 200, 0)       # vert
-}
-SCROLL_SPEED = 20
-MIN_CELL_SIZE = 5
-MAX_CELL_SIZE = 60
-ZOOM_FACTOR = 2
 
-
-cell_size = CELL_SIZE
-engine = None
-board = None
+cell_size = float(Config.CELL_SIZE)
 rows = 0
 cols = 0
+engine = None
+board = None
 offset_x = 0
 offset_y = 0
 
 pygame.init()
 
-screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
+screen = pygame.display.set_mode((Config.WINDOW_WIDTH, Config.WINDOW_HEIGHT))
 
 pygame.display.set_caption("Game of Life")
 clock = pygame.time.Clock()
@@ -72,41 +55,41 @@ BOARD_FILES = {
 current_file = None
 
 start_button = pygame.Rect(
-    GAME_WIDTH + MARGIN,
-    MARGIN,
-    UI_WIDTH - 2*MARGIN,
-    BUTTON_HEIGHT
+    Config.GAME_WIDTH + Config.MARGIN,
+    Config.MARGIN,
+    Config.UI_WIDTH - 2*Config.MARGIN,
+    Config.BUTTON_HEIGHT
 )
 
 settings_button = pygame.Rect(
-    GAME_WIDTH + MARGIN,
-    MARGIN*2 + BUTTON_HEIGHT,
-    UI_WIDTH - 2*MARGIN,
-    BUTTON_HEIGHT
+    Config.GAME_WIDTH + Config.MARGIN,
+    Config.MARGIN*2 + Config.BUTTON_HEIGHT,
+    Config.UI_WIDTH - 2*Config.MARGIN,
+    Config.BUTTON_HEIGHT
 )
 
 reset_button = pygame.Rect(
-    GAME_WIDTH + MARGIN,
-    MARGIN*3 + BUTTON_HEIGHT*2,
-    UI_WIDTH - 2*MARGIN,
-    BUTTON_HEIGHT
+    Config.GAME_WIDTH + Config.MARGIN,
+    Config.MARGIN*3 + Config.BUTTON_HEIGHT*2,
+    Config.UI_WIDTH - 2*Config.MARGIN,
+    Config.BUTTON_HEIGHT
 )
 
 exit_button = pygame.Rect(
-    GAME_WIDTH + MARGIN,
-    MARGIN*4 + BUTTON_HEIGHT*3,
-    UI_WIDTH - 2*MARGIN,
-    BUTTON_HEIGHT
+    Config.GAME_WIDTH + Config.MARGIN,
+    Config.MARGIN*4 + Config.BUTTON_HEIGHT*3,
+    Config.UI_WIDTH - 2*Config.MARGIN,
+    Config.BUTTON_HEIGHT
 )
 
 def create_horizontal_buttons(labels, start_y):
     buttons = {}
     start_x = 50
-    spacing_x = BUTTON_WIDTH + MARGIN
+    spacing_x = Config.BUTTON_WIDTH + Config.MARGIN
 
     for i, name in enumerate(labels):
         x = start_x + i * spacing_x
-        buttons[name] = pygame.Rect(x, start_y, BUTTON_WIDTH, BUTTON_HEIGHT)
+        buttons[name] = pygame.Rect(x, start_y, Config.BUTTON_WIDTH, Config.BUTTON_HEIGHT)
 
     return buttons
 
@@ -225,30 +208,32 @@ while running:
                         current_file = name
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_LEFT:
-                offset_x -= SCROLL_SPEED
+                offset_x -= Config.SCROLL_SPEED
             elif event.key == pygame.K_RIGHT:
-                offset_x += SCROLL_SPEED
+                offset_x += Config.SCROLL_SPEED
             elif event.key == pygame.K_UP:
-                offset_y -= SCROLL_SPEED
+                offset_y -= Config.SCROLL_SPEED
             elif event.key == pygame.K_DOWN:
-                offset_y += SCROLL_SPEED
+                offset_y += Config.SCROLL_SPEED
         elif event.type == pygame.MOUSEWHEEL:
+            mouse_x, mouse_y = pygame.mouse.get_pos()
+
             old_size = cell_size
 
-            if event.y > 0:  # zoom in
-                cell_size = min(int(cell_size * ZOOM_FACTOR), MAX_CELL_SIZE)
-            elif event.y < 0:  # zoom out
-                cell_size = max(int(cell_size / ZOOM_FACTOR), MIN_CELL_SIZE)
+            if event.y > 0:
+                cell_size = min(cell_size * Config.ZOOM_FACTOR, Config.MAX_CELL_SIZE)
+            elif event.y < 0:
+                cell_size = max(cell_size / Config.ZOOM_FACTOR, Config.MIN_CELL_SIZE)
 
             scale = cell_size / old_size
-            offset_x = int((offset_x + mouse_x) * scale - mouse_x)
-            offset_y = int((offset_y + mouse_y) * scale - mouse_y)
+            offset_x = (offset_x + mouse_x) * scale - mouse_x
+            offset_y = (offset_y + mouse_y) * scale - mouse_y
         mouse_x, mouse_y = pygame.mouse.get_pos()
     screen.fill((0, 0, 0))
     
     if board is not None:
-        max_x = max(0, len(board[0]) * cell_size - GAME_WIDTH)
-        max_y = max(0, len(board) * cell_size - WINDOW_HEIGHT)
+        max_x = max(0, len(board[0]) * cell_size - Config.GAME_WIDTH)
+        max_y = max(0, len(board) * cell_size - Config.WINDOW_HEIGHT)
 
         offset_x = max(0, min(offset_x, max_x))
         offset_y = max(0, min(offset_y, max_y))
@@ -256,17 +241,17 @@ while running:
     if current_view == "game" and board is not None:
         for i, row in enumerate(board):
             for j, cell in enumerate(row):
-                if cell != DEAD:
-                    color = CELL_COLORS.get(cell, (255, 0, 0))
+                if cell != Config.DEAD:
+                    color = Config.CELL_COLORS.get(cell, (255, 0, 0))
 
                     x = j * cell_size - offset_x
                     y = i * cell_size - offset_y
 
-                    if -CELL_SIZE < x < GAME_WIDTH and -CELL_SIZE < y < WINDOW_HEIGHT:
+                    if -Config.CELL_SIZE < x < Config.GAME_WIDTH and -Config.CELL_SIZE < y < Config.WINDOW_HEIGHT:
                         pygame.draw.rect(
                             screen,
                             color,
-                            (x, y, cell_size, cell_size)
+                            (int(x), int(y), int(cell_size), int(cell_size))
                         )
 
         if not paused:
@@ -292,7 +277,7 @@ while running:
     pygame.draw.rect(
         screen,
         (30, 30, 30),
-        (GAME_WIDTH, 0, UI_WIDTH, WINDOW_HEIGHT)
+        (Config.GAME_WIDTH, 0, Config.UI_WIDTH, Config.WINDOW_HEIGHT)
     )
 
     draw_buttons()

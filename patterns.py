@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Optional
 
-from constants import ALIVE, DEAD
+from config import Config
 
 
 @dataclass
@@ -20,7 +20,7 @@ def detect_block(board: list[list[int]], i: int, j: int, used_cells: set) -> Opt
     for (x, y) in block_cells:
         if not (0 <= x < len(board) and 0 <= y < len(board[0])):
             return
-        if board[x][y] != ALIVE:
+        if board[x][y] != Config.ALIVE:
             return
         if (x, y) in used_cells:
             return
@@ -32,7 +32,7 @@ def detect_block(board: list[list[int]], i: int, j: int, used_cells: set) -> Opt
                 continue
 
             if (x, y) not in block_cells:
-                if board[x][y] != DEAD:
+                if board[x][y] != Config.DEAD:
                     return
 
     for cell in block_cells:
@@ -48,7 +48,7 @@ def _detect_horizontal_blinker(board: list[list[int]], i: int, j: int, used_cell
     for (x, y) in horrizontal_blinker_cells:
             if not (0 <= x < len(board) and 0 <= y < len(board[0])):
                 return
-            if board[x][y] != ALIVE:
+            if board[x][y] != Config.ALIVE:
                 return
             if (x, y) in used_cells:
                 return
@@ -60,7 +60,7 @@ def _detect_horizontal_blinker(board: list[list[int]], i: int, j: int, used_cell
                 continue
 
             if (x, y) not in horrizontal_blinker_cells:
-                if board[x][y] != DEAD:
+                if board[x][y] != Config.DEAD:
                     return
 
     for cell in horrizontal_blinker_cells:
@@ -78,7 +78,7 @@ def _detect_vertical_blinker(board: list[list[int]], i: int, j: int, used_cells:
     for (x, y) in vertical_blinker_cell:
             if not (0 <= x < len(board) and 0 <= y < len(board[0])):
                 return
-            if board[x][y] != ALIVE:
+            if board[x][y] != Config.ALIVE:
                 return
             if (x, y) in used_cells:
                 return
@@ -90,7 +90,7 @@ def _detect_vertical_blinker(board: list[list[int]], i: int, j: int, used_cells:
                 continue
 
             if (x, y) not in vertical_blinker_cell:
-                if board[x][y] != DEAD:
+                if board[x][y] != Config.DEAD:
                     return
 
     for cell in vertical_blinker_cell:
@@ -115,7 +115,7 @@ def detect_patterns(board):
 
     for i in range(height):
         for j in range(width):
-            if board[i][j] != ALIVE:
+            if board[i][j] != Config.ALIVE:
                 continue
 
             for detect in detectors:

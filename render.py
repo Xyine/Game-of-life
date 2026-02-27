@@ -1,10 +1,10 @@
-from constants import ALIVE, DEAD, ZOMBIE
+from config import Config
 from patterns import Pattern
 
 
 def render(board_state: list[list[int]]) -> str:
     """Return a visual str of a board state that can be print in the terminal."""
-    mapping_dead_alive: dict[int, str] = {DEAD: "⬛", ALIVE: "⬜", ZOMBIE: "🟩"}
+    mapping_dead_alive: dict[int, str] = {Config.DEAD: "⬛", Config.ALIVE: "⬜", Config.ZOMBIE: "🟩"}
 
     return "\n".join(
         "".join(mapping_dead_alive[cell] for cell in row)
