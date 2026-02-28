@@ -218,7 +218,3 @@ class GameGUI:
             self.clock.tick(60)
 
         pygame.quit()
-
-
-if __name__ == "__main__":
-    GameGUI().run()

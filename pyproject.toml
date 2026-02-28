@@ -1,0 +1,18 @@
+[project]
+name = "game-of-life"
+version = "0.1.0"
+description = "Game of Life with GUI and CLI"
+authors = [{name = "Xyine"}]
+requires-python = ">=3.12"
+
+dependencies = [
+    "pygame",
+    "click",
+    "keyboard",
+    "pydantic"
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest"
+]
