@@ -1,5 +1,5 @@
-from config import Config
-from game_of_life import next_board_state
+from config.config import Config
+from engine.game_of_life import next_board_state
 
 
 def test_next_board_state_dead_cell_rule():

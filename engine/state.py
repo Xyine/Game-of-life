@@ -1,7 +1,7 @@
 import random
 from typing import Callable
 
-from config import Config
+from config.config import Config
 
 
 def dead_state(width: int, height: int) -> list[list[int]]:

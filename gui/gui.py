@@ -1,8 +1,8 @@
 import pygame
 import time
-from config import Config
-from game_of_life import GameOfLife
-from rules import classic_rules, zombie_rules, von_neumann_rules, respawn_rules
+from config.config import Config
+from engine.game_of_life import GameOfLife
+from rules.rules import classic_rules, zombie_rules, von_neumann_rules, respawn_rules
 
 
 class GameGUI:

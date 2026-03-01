@@ -3,8 +3,8 @@ import random
 from typing import Callable, Literal, Optional
 
 from pydantic import BaseModel, model_validator
-from config import Config
-from state import dead_state, random_state
+from config.config import Config
+from engine.state import dead_state, random_state
 
 
 class BoardFile(BaseModel):

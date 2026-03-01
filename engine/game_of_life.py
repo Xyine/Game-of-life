@@ -4,12 +4,12 @@ from typing import Callable
 import keyboard
 from time import sleep
 
-from board import create_board, create_history
-from config import Config
-from patterns import detect_patterns
-from render import apply_pattern_colors, render
-from rules import classic_rules, zombie_rules, von_neumann_rules, respawn_rules
-from state import dead_state, next_board_state
+from engine.board import create_board, create_history
+from config.config import Config
+from engine.patterns import detect_patterns
+from engine.render import apply_pattern_colors, render
+from rules.rules import classic_rules, zombie_rules, von_neumann_rules, respawn_rules
+from engine.state import dead_state, next_board_state
 
 
 class GameOfLife():
@@ -84,7 +84,6 @@ class GameOfLife():
                 self.board, self.ever_alive = next_board_state(self.board, self.rules, self.ever_alive)
             sleep(self.interval_s)
         os.system('cls' if os.name == 'nt' else 'clear')
-
 
 
 #========================== OPTIMISATION CORNER ===========================================

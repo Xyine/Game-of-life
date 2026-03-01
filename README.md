@@ -1,55 +1,172 @@
 # Game of Life
+![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
 
-A simple Python implementation of Conway’s Game of Life, playable in the terminal with interactive controls.
+A modern and extensible implementation of Conway’s Game of Life in Python, featuring both a graphical interface and a powerful command-line mode.
 
----
+Built as a clean, modular, and developer-friendly simulation engine.
 
 ## Features
 
-- Random initial board generation  
-- Classic Game of Life rules  
-- Interactive controls: pause/resume and quit  
-- Clean terminal display at each generation  
+- Graphical interface (pygame)
 
----
+- Interactive terminal mode
 
-## Requirements
+- Multiple rule sets (Classic, Zombie, Von Neumann, Respawn)
 
-- Python 3  
-- [`keyboard`](https://pypi.org/project/keyboard/) library installed in your virtual environment:
+- Load predefined patterns (Blinker, Pulsar, LWSS)
+
+- Zoom & scroll support (GUI)
+
+- Clean architecture (engine / GUI / CLI separation)
+
+- Fast setup using uv
+
+## Quick Start
+
+Windows users:
+
+This project targets a Unix-like environment.
+
+On Windows, please use WSL2.
+
+
+Clone the repository:
 
 ```bash
-pip install keyboard
+git clone https://github.com/xyine/game-of-life.git
+cd game-of-life
 ```
 
-## Running the Game
 
-Activate your virtual environment, then run:
+Install (dev mode):
 
-On Linux and MacOS:
+This project uses uv for fast Python environments.
+
 ```bash
-sudo $(which python3) game_of_life.py
+make install-dev
 ```
 
-On Windows:
+This will:
+
+Create a virtual environment
+
+Install dependencies
+
+Install the project in editable mode
+
+## Run the Game
+
+GUI Mode:
+
 ```bash
-python3 game_of_life.py
+make game
 ```
 
-Using sudo with the Python from your venv lets the game detect keyboard input without installing the library system-wide.
+Terminal Mode use the CLI:
+
+```bash
+sudo $(which python3) main.py terminal
+```
+
+You can use argument to 
+Examples:
+```bash
+sudo $(which python3) main.py terminal --width 40 --height 40
+sudo $(which python3) main.py terminal --file board_file/pulsar.json
+sudo $(which python3) main.py terminal --interval 0.1
+```
 
 ## Controls
 
-    SPACE → Pause / Resume
+GUI:
 
-    Q → Quit the game cleanly
+Mouse wheel → Zoom
 
-The terminal is cleared at each generation so the board updates in place. Exiting leaves the terminal clean.
+Arrow keys → Move camera
 
-## Optional Parameters
+Settings panel → Rules, speed, patterns
 
-You can adjust the board size and speed by modifying the run_life parameters in game_of_life.py:
+Terminal:
 
-```python
-run_life(board_width=80, board_height=40, interval_s=0.1)
+Key	Action
+SPACE	Pause / Resume
+Q	Quit
+
+## Architecture
+
+This project is structured with separation of concerns:
+
 ```
+game_of_life/
+│
+├── engine/        # Simulation core
+├── gui/           # Pygame interface
+├── cli/           # Click-based CLI
+├── rules/         # Rule systems
+├── board_file/    # Pattern presets
+└── main.py        # Entry point
+```
+
+Design Goals:
+
+Clean modular architecture
+
+Easy extensibility (new rules / renderers)
+
+Testable simulation engine
+
+Portfolio-grade code quality
+
+## Configuration
+
+The engine supports configuration using the CLI:
+
+```bash
+--width INTEGER # Width of the grid.
+--height INTEGER # Height of the grid.
+--file TEXT # Load an initial pattern from a file path.
+--interval FLOAT # Time between generations (in seconds).
+--fill-mode TEXT # Cell state when initializing the grid between DEAD and RANDOM.
+--placement TEXT # Where to place the loaded file between topleft and center.
+--rules [classic|zombie|neumann|respawn] # Rules available
+--patterns # Flag that colored the patterns of the grid at each generation
+```
+
+## Development
+
+Run tests:
+```bash
+uv run pytest
+```
+
+## Tech Stack
+
+Python 3.12+
+
+pygame (GUI)
+
+click (CLI)
+
+uv (environment management)
+
+pytest (testing)
+
+## Why this project?
+
+This project was built for fun to:
+
+Explore simulation design
+
+Practice clean architecture
+
+Build a portfolio-quality Python project
+
+Experiment with GUI + CLI coexistence
+
+## Contributing
+
+Ideas, issues, and pull requests are welcome!
+
+## License
+
+MIT License

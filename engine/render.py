@@ -1,5 +1,5 @@
-from config import Config
-from patterns import Pattern
+from config.config import Config
+from engine.patterns import Pattern
 
 
 def render(board_state: list[list[int]]) -> str:

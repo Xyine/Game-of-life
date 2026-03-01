@@ -1,7 +1,7 @@
 import click
-from game_of_life import GameOfLife
-from gui import GameGUI
-from rules import classic_rules, zombie_rules, von_neumann_rules, respawn_rules
+from engine.game_of_life import GameOfLife
+from gui.gui import GameGUI
+from rules.rules import classic_rules, zombie_rules, von_neumann_rules, respawn_rules
 
 RULES_MAP = {
     "classic": classic_rules,

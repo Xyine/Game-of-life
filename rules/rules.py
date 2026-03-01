@@ -1,6 +1,6 @@
 import random
 
-from config import Config
+from config.config import Config
 
 
 MOORE_NEIGHBORS = [
