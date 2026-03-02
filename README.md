@@ -9,6 +9,23 @@ Built as a clean, modular, and developer-friendly simulation engine.
 
 ![Description](assets/demo.gif)
 
+## Executables
+
+Linux:
+After downloading the Linux binary from the release, you need to make it executable:
+
+```bash
+chmod +x gameoflife
+```
+
+Then you can run the game by double clicking on the file or using this command:
+```bash
+./gameoflife
+```
+
+Windows:
+
+
 ## Features
 
 - Graphical interface (pygame)
