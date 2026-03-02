@@ -40,8 +40,6 @@ Windows:
 
 - Clean architecture (engine / GUI / CLI separation)
 
-- Fast setup using uv
-
 ## Quick Start
 
 Windows users:
@@ -60,8 +58,6 @@ cd game-of-life
 
 
 Install (dev mode):
-
-This project uses uv for fast Python environments.
 
 ```bash
 make install-dev
@@ -157,7 +153,7 @@ The engine supports configuration using the CLI:
 
 Run tests:
 ```bash
-uv run pytest
+pytest -v
 ```
 
 ## Tech Stack
@@ -167,8 +163,6 @@ Python 3.12+
 pygame (GUI)
 
 click (CLI)
-
-uv (environment management)
 
 pytest (testing)
 
