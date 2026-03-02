@@ -5,6 +5,10 @@ A modern and extensible implementation of Conway’s Game of Life in Python, fea
 
 Built as a clean, modular, and developer-friendly simulation engine.
 
+## Preview
+
+![Description](assets/demo.gif)
+
 ## Features
 
 - Graphical interface (pygame)
