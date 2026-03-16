@@ -15,12 +15,12 @@ Linux:
 After downloading the Linux binary from the release, you need to make it executable:
 
 ```bash
-chmod +x gameoflife
+chmod +x GameOfLife-v1.0
 ```
 
 Then you can run the game by double clicking on the file or using this command:
 ```bash
-./gameoflife
+./GameOfLife-v1.0
 ```
 
 Windows:
