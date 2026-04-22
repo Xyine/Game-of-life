@@ -88,6 +88,10 @@ class GameOfLife():
 
 #========================== OPTIMISATION CORNER ===========================================
 
+# IDEA:
+# Convert the board into a NumPy array: matrix access and operations are much faster than nested Python lists.
+# Use boolean masks to check whether a pattern matches, it is very fast in NumPy.
+
 def next_board_state_optimized(board_state: list[list[int]]) -> list[list[int]]:
     """Calculate next board state with a padding optimisation."""
     height = len(board_state)
